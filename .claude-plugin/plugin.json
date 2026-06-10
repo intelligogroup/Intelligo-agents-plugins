@@ -1,15 +1,15 @@
 {
-    "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
-    "name": "intelligo-clarity",
-    "displayName": "Intelligo Clarity",
-    "version": "0.1.0",
-    "description": "Intelligo Clarity — bundles the Clarity risk-intelligence MCP server with intelligo skills.",
-    "author": {
-      "name": "Intelligo Group",
-      "url": "https://github.com/intelligogroup"
-    },
-    "homepage": "https://github.com/intelligogroup/clarity-agents-plugins",
-    "repository": "https://github.com/intelligogroup/clarity-agents-plugins",
-    "mcpServers": "./.mcp.json",
-    "skills": "./skills"
-  }
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "intelligo",
+  "displayName": "Intelligo",
+  "version": "0.1.0",
+  "description": "Connect Claude to Intelligo for risk intelligence — background checks, credit checks, and adverse-media and social screening.",
+  "author": {
+    "name": "Intelligo Group",
+    "url": "https://github.com/intelligogroup"
+  },
+  "homepage": "https://github.com/intelligogroup/intelligo-connector",
+  "repository": "https://github.com/intelligogroup/intelligo-connector",
+  "mcpServers": "./.mcp.json",
+  "skills": "./skills"
+}

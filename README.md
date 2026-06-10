@@ -1,83 +1,61 @@
-# clarity-agents-plugins
+# Intelligo for Claude & Gemini
 
-The official [Claude Code](https://code.claude.com) plugin marketplace for
-**Intelligo Clarity**. It distributes the `intelligo-clarity` plugin: the Clarity
-risk-intelligence MCP connector bundled with skills for working with Clarity
-background-check data.
+Bring **Intelligo** risk intelligence into your AI assistant. This connector links Claude
+(and Gemini) to your Intelligo account so you can pull background checks, credit checks,
+and adverse-media and social-media screening straight into the conversation — summaries,
+risk flags, comparisons, and portfolio-wide trends, grounded in your own data.
 
 ## Install
 
-Add the marketplace, then install the plugin:
+**Claude Code**
 
 ```bash
-claude plugin marketplace add intelligogroup/clarity-agents-plugins
-claude plugin install intelligo-clarity@clarity-tools
+claude plugin marketplace add intelligogroup/intelligo-connector
+claude plugin install intelligo@intelligo-tools
 ```
 
-Or from inside an interactive Claude Code session:
+Or from an interactive session:
 
 ```
-/plugin marketplace add intelligogroup/clarity-agents-plugins
-/plugin install intelligo-clarity@clarity-tools
+/plugin marketplace add intelligogroup/intelligo-connector
+/plugin install intelligo@intelligo-tools
+```
+
+**Claude (web & desktop)** — add Intelligo from the Connectors directory, or as a custom
+connector: **Settings → Connectors → Add** → `https://clarityapi.intelligo.ai/mcp`.
+
+**Gemini CLI**
+
+```bash
+gemini extensions install https://github.com/intelligogroup/intelligo-connector
 ```
 
 ## What you get
 
-The `intelligo-clarity` plugin registers:
+The connector registers the Intelligo MCP server (`https://clarityapi.intelligo.ai/mcp`),
+exposing your Intelligo projects, profiles, and report content to your assistant. Ask
+things like:
 
-- **Clarity MCP connector** — an HTTP MCP server pointing at Clarity's hosted
-  endpoint (`https://clarityapi.intelligo.ai/mcp`), exposing Clarity projects,
-  profiles, and report content.
-- **Four skills** that trigger from natural language:
-
-  | Skill | What it does |
-  |-------|--------------|
-  | `intelligo-profile-summary` | Factual summary of one profile — background, credit, social — with red/yellow flags and key findings. |
-  | `compare-clarity-reports` | What changed since a prior report, or what overlaps across profiles. Read-only. |
-  | `intelligo-risk-trends` | Risk trends across many reports — flags over time, emerging risks, keyword search; summary, table, charts, or live dashboard. |
-  | `intelligo-prep-committee-deck` | Turns Clarity findings into IC-ready narratives, PDFs, or PPTX decks. |
+- "Summarize the red flags on [subject]."
+- "What changed since the last report on this profile?"
+- "Which of our profiles mention [entity or keyword]?"
 
 ## Authentication
 
-Auth is handled by the Clarity MCP server at connect time (OAuth). There are no
-API keys to place in this repo or in the manifest.
+Sign-in is handled by Intelligo over OAuth on first connect — there are no API keys to
+place in this repo or in any config. Your assistant can only access data your Intelligo
+account is permitted to see.
 
 ## Requirements
 
-- A valid Intelligo Clarity account with access to the Clarity API.
+A valid Intelligo account.
 
-## Updating
+## Links
 
-The plugin version lives in `plugins/intelligo-clarity/.claude-plugin/plugin.json`.
-Bump it on every release so existing users pick up changes via
-`/plugin marketplace update`. (Omit it to track the commit SHA instead.)
-
-## Layout
-
-```
-.claude-plugin/
-  marketplace.json              # marketplace catalog (lists the intelligo-clarity plugin)
-plugins/
-  intelligo-clarity/
-    .claude-plugin/plugin.json  # plugin manifest
-    .mcp.json                   # Clarity HTTP MCP server
-    skills/                     # the four skills above
-```
-
-## Other AI platforms
-
-The same Clarity MCP server powers connectors on ChatGPT and Gemini too — they all speak
-MCP, so there's one server to maintain. This repo also ships a **Gemini CLI extension**
-manifest ([`gemini-extension.json`](gemini-extension.json) + [`GEMINI.md`](GEMINI.md)):
-
-```bash
-gemini extensions install https://github.com/intelligogroup/clarity-agents-plugins
-```
-
-ChatGPT (Apps SDK) is submitted via OpenAI's dashboard rather than a repo file. See
-[docs/marketplace-submissions.md](docs/marketplace-submissions.md) for the full
-cross-platform status, requirements, and checklists.
+- Website — https://intelligo.ai
+- Support & contact — https://intelligo.ai/contact
+- Privacy policy — https://intelligo.ai/privacy
 
 ## Maintainers
 
-Intelligo — internal back-office / platform engineering.
+Intelligo Group.
