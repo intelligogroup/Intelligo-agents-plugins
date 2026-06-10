@@ -1,0 +1,230 @@
+<!--
+  Intelligo Risk Trends — live dashboard template (Clarity design system).
+  Starting point for create_artifact. Before wiring:
+    1. Probe each Clarity tool once in chat and confirm its real name + output shape.
+    2. Replace the TOOL_* constants and the parse* functions to match reality.
+    3. List the real tool names in create_artifact's mcp_tools.
+  Data is pulled fresh on each open via window.cowork.callMcpTool (cached + Reload button supplied by the host).
+
+  Styling matches the Clarity product UI: dark navy panels, teal accent, brand flag
+  palette (Red=magenta, Yellow=amber, Info=blue). Tokens live in :root — reuse them.
+
+  Panels:
+   - KPI strip: Reports/Monitoring with flags, Total flags, Red/Yellow/Info (+%).
+   - Donuts: Flag Level, Product Type, Product → REAL fields.
+              Flag Type (category) → DERIVED, not a stored field. The chart calls
+              group_by:["category"]; if the connector doesn't return it yet, the card
+              falls back to an empty state. Build that derived category server-side
+              (classify finding text) before relying on this chart.
+   - Click a Flag Level or Product Type slice to FILTER the whole dashboard.
+   - Flags over time (by level): the core trend.
+-->
+<div id="app">
+  <style>
+    :root {
+      color-scheme: dark;
+      --cl-bg:#0a1a27; --cl-panel:#0e2335; --cl-panel-2:#12293c;
+      --cl-border:rgba(255,255,255,.08); --cl-text:#e7eef4; --cl-muted:#8ba0b2;
+      --cl-teal:#36d1c4; --cl-red:#ec3a82; --cl-yellow:#f5c451; --cl-info:#4aa3df;
+      --cl-green:#3fd07a; --cl-radius:14px;
+    }
+    #app { font-family:Inter,-apple-system,"Segoe UI",Roboto,sans-serif; color:var(--cl-text);
+           background:var(--cl-bg); padding:20px; border-radius:16px; }
+    #app .head { display:flex; align-items:center; gap:10px; }
+    #app .dot { width:18px; height:18px; border-radius:50%; border:3px solid var(--cl-teal); }
+    #app h1 { font-size:20px; font-weight:700; margin:0; }
+    #app .sub { color:var(--cl-muted); font-size:12px; margin:4px 0 12px 28px; }
+    #app .filters { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 16px 28px; min-height:26px; }
+    #app .chip { display:inline-flex; align-items:center; gap:6px; background:var(--cl-panel-2);
+                 border:1px solid var(--cl-border); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--cl-text); }
+    #app .chip b { font-weight:600; }
+    #app .chip .x { cursor:pointer; color:var(--cl-muted); font-weight:700; }
+    #app .chip .x:hover { color:var(--cl-text); }
+    #app .chip-clear { cursor:pointer; color:var(--cl-teal); font-size:12px; }
+    #app .hint { color:var(--cl-muted); font-size:11px; }
+    #app .kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:16px; }
+    #app .kpi { background:var(--cl-panel); border:1px solid var(--cl-border); border-radius:var(--cl-radius);
+                padding:14px 16px; position:relative; overflow:hidden; }
+    #app .kpi::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent,transparent); }
+    #app .kpi .n { font-size:24px; font-weight:700; line-height:1.1; }
+    #app .kpi .n .pct { font-size:12px; font-weight:600; color:var(--cl-muted); margin-left:6px; }
+    #app .kpi .l { font-size:11px; color:var(--cl-muted); text-transform:uppercase; letter-spacing:.05em; margin-top:4px; }
+    #app .k-red{--accent:var(--cl-red)} #app .k-yellow{--accent:var(--cl-yellow)}
+    #app .k-info{--accent:var(--cl-info)} #app .k-rep{--accent:var(--cl-teal)}
+    #app .red{color:var(--cl-red)} #app .yellow{color:var(--cl-yellow)} #app .info{color:var(--cl-info)}
+    #app .donuts { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:16px; }
+    #app .card { background:var(--cl-panel); border:1px solid var(--cl-border); border-radius:var(--cl-radius); padding:16px; }
+    #app .card h2 { font-size:13px; font-weight:600; margin:0 0 4px; text-align:center; }
+    #app .card .clickable { font-size:10px; color:var(--cl-teal); text-align:center; margin-bottom:8px; height:12px; }
+    #app .dwrap { position:relative; height:160px; cursor:pointer; }
+    #app .empty { height:160px; display:flex; align-items:center; justify-content:center; text-align:center;
+                  color:var(--cl-muted); font-size:12px; line-height:1.5; padding:0 8px; }
+    #app .full { position:relative; height:240px; }
+    #app .msg { color:var(--cl-muted); font-size:13px; padding:16px; text-align:center; }
+    @media (max-width:900px){ #app .kpis{grid-template-columns:repeat(3,1fr)} #app .donuts{grid-template-columns:repeat(2,1fr)} }
+    @media (max-width:560px){ #app .kpis{grid-template-columns:repeat(2,1fr)} #app .donuts{grid-template-columns:1fr} }
+  </style>
+
+  <div class="head"><span class="dot"></span><h1>Risk Trends</h1></div>
+  <div class="sub" id="window-label">Loading…</div>
+  <div class="filters" id="filters"></div>
+
+  <div class="kpis">
+    <div class="kpi k-rep"><div class="n" id="kpi-reports" style="color:var(--cl-teal)">—</div><div class="l">Reports with flags</div></div>
+    <div class="kpi k-rep"><div class="n" id="kpi-monitoring" style="color:var(--cl-teal)">—</div><div class="l">Monitoring with flags</div></div>
+    <div class="kpi"><div class="n" id="kpi-total">—</div><div class="l">Total flags</div></div>
+    <div class="kpi k-red"><div class="n red" id="kpi-red">—</div><div class="l">Red flags</div></div>
+    <div class="kpi k-yellow"><div class="n yellow" id="kpi-yellow">—</div><div class="l">Yellow flags</div></div>
+    <div class="kpi k-info"><div class="n info" id="kpi-info">—</div><div class="l">Info flags</div></div>
+  </div>
+
+  <div class="donuts">
+    <div class="card"><h2>Flag Level</h2><div class="clickable">click to filter</div><div class="dwrap"><canvas id="d-level" role="img" aria-label="Flag level breakdown — click a slice to filter"></canvas></div></div>
+    <div class="card"><h2>Product Type</h2><div class="clickable">click to filter</div><div class="dwrap"><canvas id="d-ptype" role="img" aria-label="Product type breakdown — click a slice to filter"></canvas></div></div>
+    <div class="card"><h2>Product</h2><div class="clickable">&nbsp;</div><div class="dwrap"><canvas id="d-product" role="img" aria-label="Product breakdown"></canvas></div></div>
+    <div class="card"><h2>Flag Type</h2><div class="clickable">&nbsp;</div><div class="dwrap" id="wrap-type"><canvas id="d-type" role="img" aria-label="Flag type / category breakdown (derived)"></canvas></div></div>
+  </div>
+
+  <div class="card"><h2 style="text-align:left">Flags over time (by level)</h2><div class="full"><canvas id="chart-time" role="img" aria-label="Flags over time by level"></canvas></div></div>
+
+  <div id="status" class="msg"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<script>
+  const C = { red:"#ec3a82", yellow:"#f5c451", info:"#4aa3df", teal:"#36d1c4",
+              text:"#e7eef4", muted:"#8ba0b2", grid:"rgba(255,255,255,.07)", panel:"#0e2335" };
+  const PALETTE = ["#36d1c4","#4aa3df","#7c6cf0","#f5c451","#ec3a82","#3fd07a","#e08a3c","#9aa7b3"];
+  if (window.Chart) {
+    Chart.defaults.color = C.muted;
+    Chart.defaults.font.family = "Inter, -apple-system, Segoe UI, Roboto, sans-serif";
+    Chart.defaults.borderColor = C.grid;
+  }
+
+  // --- WIRE THESE to the real connector ---
+  const TOOL_AGGREGATE = "mcp__clarity__aggregate_flags";
+
+  function monthsAgo(n){ const d=new Date(); d.setMonth(d.getMonth()-n); return d.toISOString().slice(0,10); }
+  const FROM = monthsAgo(12), TO = new Date().toISOString().slice(0,10);
+  const fmt = n => (n==null ? "—" : Number(n).toLocaleString());
+
+  // Cross-filter state. Clicking a Flag Level / Product Type slice toggles these.
+  const state = { filters: { flag_level:null, product_type:null } };
+  const charts = {};   // live Chart instances, destroyed on refresh
+
+  // Build a filters object for the API, omitting nulls; `exclude` drops a dimension
+  // so a donut never filters itself (you can still switch slices).
+  function activeFilters(exclude){
+    const f = {};
+    for (const k in state.filters) if (state.filters[k] && k !== exclude) f[k] = state.filters[k];
+    return f;
+  }
+  async function call(group_by, exclude, extra){
+    return window.cowork.callMcpTool(TOOL_AGGREGATE,
+      Object.assign({ from:FROM, to:TO, group_by, filters: activeFilters(exclude) }, extra||{}));
+  }
+
+  function toggleFilter(key, value){
+    state.filters[key] = (state.filters[key] === value) ? null : value;
+    renderChips();
+    load();           // re-pull everything with the new filter set
+  }
+  function renderChips(){
+    const el = document.getElementById("filters");
+    const labels = { flag_level:"Flag level", product_type:"Product type" };
+    const active = Object.keys(state.filters).filter(k=>state.filters[k]);
+    if (!active.length){ el.innerHTML = '<span class="hint">Tip: click a Flag Level or Product Type slice to filter.</span>'; return; }
+    el.innerHTML = active.map(k =>
+      `<span class="chip"><b>${labels[k]}:</b> ${state.filters[k]} <span class="x" data-k="${k}" role="button" aria-label="Remove filter">✕</span></span>`
+    ).join("") + ` <span class="chip-clear" id="clear-all" role="button">Clear all</span>`;
+    el.querySelectorAll(".x").forEach(x => x.onclick = () => toggleFilter(x.dataset.k, state.filters[x.dataset.k]));
+    const ca = document.getElementById("clear-all");
+    if (ca) ca.onclick = () => { state.filters = { flag_level:null, product_type:null }; renderChips(); load(); };
+  }
+
+  async function load() {
+    document.getElementById("window-label").textContent = `${FROM} → ${TO} · org-scoped · refreshes on open`;
+    try {
+      const [byTime, byLevel, byPtype, byProduct, repCount] = await Promise.all([
+        call(["month","flag_level"]),
+        call(["flag_level"], "flag_level"),       // level donut ignores its own filter
+        call(["product_type"], "product_type"),   // ptype donut ignores its own filter
+        call(["product"]),
+        call([], null, {count:"reports"})          // reports-with-flags total
+      ]);
+      renderKpis(byLevel, repCount);
+      donut("d-level",   parseKey(byLevel,"flag_level"),   levelColors(byLevel), "flag_level");
+      donut("d-ptype",   parseKey(byPtype,"product_type"), PALETTE,             "product_type");
+      donut("d-product", parseKey(byProduct,"product"),    PALETTE,             null);
+      renderTime(parseTime(byTime));
+      loadCategory();   // derived — separate so its absence doesn't break the batch
+    } catch (e) {
+      document.getElementById("status").textContent =
+        "Couldn't load aggregated data — confirm tool name/shape and wire the parse* helpers. " + e;
+    }
+  }
+
+  // Flag Type / category is a DERIVED field. Try it; if the connector doesn't return
+  // it, show the empty state instead of a fake chart.
+  async function loadCategory(){
+    const wrap = document.getElementById("wrap-type");
+    try {
+      const byCat = await call(["category"]);
+      const p = parseKey(byCat, "category");
+      if (!p.labels.length) throw new Error("no category buckets");
+      donut("d-type", p, PALETTE, null);
+    } catch (e) {
+      wrap.outerHTML = '<div class="empty" id="wrap-type">Category is derived, not stored.<br>Add a server-side category (classify finding text) or derive themes in chat to populate this chart.</div>';
+    }
+  }
+
+  // ---- parsers (adapt to real output shape) ----
+  function parseKey(raw, key){ const b=(raw&&raw.buckets)||[];
+    return { labels:b.map(x=>x[key]), data:b.map(x=>x.count) }; }
+  function levelColors(raw){ const m={red:C.red,yellow:C.yellow,info:C.info};
+    return ((raw&&raw.buckets)||[]).map(x=>m[(x.flag_level||"").toLowerCase()]||C.muted); }
+  function parseTime(raw){ const b=(raw&&raw.buckets)||[]; const months=[...new Set(b.map(x=>x.month))].sort();
+    const get=(m,lvl)=>(b.find(x=>x.month===m&&(x.flag_level||"").toLowerCase()===lvl)||{}).count||0;
+    return { labels:months, red:months.map(m=>get(m,"red")), yellow:months.map(m=>get(m,"yellow")), info:months.map(m=>get(m,"info")) }; }
+
+  // ---- renderers ----
+  function renderKpis(byLevel, repCount){
+    const t = (byLevel && byLevel.totals) || {};
+    const red=t.red||0, yel=t.yellow||0, info=t.info||0, total=red+yel+info;
+    const pct=v=> total? ` <span class="pct">${(v/total*100).toFixed(1)}%</span>` : "";
+    document.getElementById("kpi-total").textContent = fmt(total);
+    document.getElementById("kpi-red").innerHTML    = fmt(red)+pct(red);
+    document.getElementById("kpi-yellow").innerHTML = fmt(yel)+pct(yel);
+    document.getElementById("kpi-info").innerHTML   = fmt(info)+pct(info);
+    document.getElementById("kpi-reports").textContent    = fmt(repCount && repCount.total);
+    document.getElementById("kpi-monitoring").textContent = "—"; // wire to reports count where product_type=Monitoring
+  }
+
+  function donut(id, parsed, colors, filterKey){
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart(document.getElementById(id), { type:"doughnut",
+      data:{ labels:parsed.labels, datasets:[{ data:parsed.data, backgroundColor:colors, borderColor:C.panel, borderWidth:2 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:"62%",
+                onClick: filterKey ? (e, els, chart) => {
+                  if (!els.length) return;
+                  toggleFilter(filterKey, chart.data.labels[els[0].index]);
+                } : undefined,
+                plugins:{ legend:{ position:"right", labels:{ color:C.text, boxWidth:10, font:{size:11} } } } } });
+  }
+
+  function renderTime(t){
+    const gridOpts={ grid:{color:C.grid}, ticks:{color:C.muted} };
+    if (charts["chart-time"]) charts["chart-time"].destroy();
+    charts["chart-time"] = new Chart(document.getElementById("chart-time"), { type:"line",
+      data:{ labels:t.labels, datasets:[
+        {label:"Red", data:t.red, borderColor:C.red, backgroundColor:C.red, tension:.35, pointRadius:2},
+        {label:"Yellow", data:t.yellow, borderColor:C.yellow, backgroundColor:C.yellow, tension:.35, pointRadius:2},
+        {label:"Info", data:t.info, borderColor:C.info, backgroundColor:C.info, borderDash:[4,4], tension:.35, pointRadius:2}] },
+      options:{ responsive:true, maintainAspectRatio:false,
+                plugins:{legend:{position:"bottom", labels:{color:C.text, usePointStyle:true, boxWidth:8}}},
+                scales:{ x:gridOpts, y:{...gridOpts, beginAtZero:true} } } });
+  }
+
+  renderChips();
+  load();
+</script>

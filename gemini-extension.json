@@ -1,0 +1,12 @@
+{
+  "name": "intelligo-clarity",
+  "version": "0.1.0",
+  "description": "Intelligo Clarity — Clarity risk-intelligence MCP connector for Gemini CLI.",
+  "contextFileName": "GEMINI.md",
+  "mcpServers": {
+    "intelligo-clarity": {
+      "httpUrl": "https://clarityapi.intelligo.ai/mcp",
+      "authProviderType": "dynamic_discovery"
+    }
+  }
+}

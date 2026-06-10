@@ -1,0 +1,8 @@
+{
+	"mcpServers": {
+		"Intelligo Clarity": {
+			"type": "http",
+			"url": "https://clarityapi.intelligo.ai/mcp"
+		}
+	}
+}

@@ -1,0 +1,16 @@
+{
+  "name": "clarity-tools",
+  "owner": {
+    "name": "Intelligo Group"
+  },
+  "description": "Intelligo's official Claude Code plugins — the Clarity risk-intelligence MCP connector and supporting skills.",
+  "plugins": [
+    {
+      "name": "intelligo-clarity",
+      "source": "./",
+      "description": "Clarity risk-intelligence MCP connector plus skills for summarizing profiles, comparing reports, surfacing risk trends, and preparing investment-committee materials.",
+      "category": "risk-intelligence",
+      "keywords": ["clarity", "intelligo", "risk", "due-diligence", "background-check", "mcp"]
+    }
+  ]
+}
