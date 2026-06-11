@@ -1,4 +1,4 @@
-# Intelligo for Claude & Gemini
+# Intelligo for Agents
 
 Bring **Intelligo** risk intelligence into your AI assistant. This connector links Claude
 (and Gemini) to your Intelligo account so you can pull background checks, credit checks,
