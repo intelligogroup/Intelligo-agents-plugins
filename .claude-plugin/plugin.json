@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "intelligo",
   "displayName": "Intelligo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Connect Claude to Intelligo for risk intelligence — background checks, credit checks, and adverse-media and social screening.",
   "author": {
     "name": "Intelligo Group",
