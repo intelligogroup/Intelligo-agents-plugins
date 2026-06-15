@@ -1,7 +1,7 @@
 ---
 name: intelligo-profile-summary
 description: >-
-  High-level factual summary of one Intelligo Clarity profile — background check, credit check, and
+  High-level factual summary of one Intelligo profile — background check, credit check, and
   social media analysis, with executive summary, red/yellow flags, and key findings. Summarizes one
   profile (person or company), not a project; if the query is ambiguous it searches profiles and
   projects, and hands a project off to the project-summary skill. Use whenever the user wants a
@@ -14,7 +14,7 @@ description: >-
 
 # Intelligo Profile Summary
 
-Turn an Intelligo Clarity **profile** into a high-level, factual summary the user can read in under a minute.
+Turn an Intelligo **profile** into a high-level, factual summary the user can read in under a minute.
 
 ## Data model (overview)
 
@@ -316,7 +316,7 @@ Non-flagged material cards use the same type-specific rendering, just without th
 2. 🟡 YELLOW-flagged cards next
 3. Non-flagged material cards last
 
-Within each tier, preserve the order Clarity returned. The connector's order reflects Clarity's classification — keep it.
+Within each tier, preserve the order Intelligo returned. The connector's order reflects Intelligo's classification — keep it.
 
 ### Findings filter — what stays out of the list
 

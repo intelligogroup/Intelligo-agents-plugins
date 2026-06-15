@@ -1,12 +1,12 @@
 <!--
-  Intelligo Risk Trends — live dashboard template (Clarity design system).
+  Intelligo Risk Trends — live dashboard template (Intelligo design system).
   Starting point for create_artifact. Before wiring:
-    1. Probe each Clarity tool once in chat and confirm its real name + output shape.
+    1. Probe each Intelligo tool once in chat and confirm its real name + output shape.
     2. Replace the TOOL_* constants and the parse* functions to match reality.
     3. List the real tool names in create_artifact's mcp_tools.
   Data is pulled fresh on each open via window.cowork.callMcpTool (cached + Reload button supplied by the host).
 
-  Styling matches the Clarity product UI: dark navy panels, teal accent, brand flag
+  Styling matches the Intelligo product UI: dark navy panels, teal accent, brand flag
   palette (Red=magenta, Yellow=amber, Info=blue). Tokens live in :root — reuse them.
 
   Panels:
@@ -102,7 +102,7 @@
   }
 
   // --- WIRE THESE to the real connector ---
-  const TOOL_AGGREGATE = "mcp__clarity__aggregate_flags";
+  const TOOL_AGGREGATE = "mcp__intelligo__aggregate_flags";
 
   function monthsAgo(n){ const d=new Date(); d.setMonth(d.getMonth()-n); return d.toISOString().slice(0,10); }
   const FROM = monthsAgo(12), TO = new Date().toISOString().slice(0,10);

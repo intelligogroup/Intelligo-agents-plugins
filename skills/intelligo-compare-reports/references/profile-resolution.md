@@ -1,6 +1,6 @@
 # Intelligo Profile Resolution
 
-Shared reference for resolving a user's reference to a subject (by name or vague mention) to a single Intelligo Clarity Profile. Used by any Intelligo skill that operates on a specific profile — summary, finding-detail, flag-detail, comparison, etc.
+Shared reference for resolving a user's reference to a subject (by name or vague mention) to a single Intelligo Profile. Used by any Intelligo skill that operates on a specific profile — summary, finding-detail, flag-detail, comparison, etc.
 
 This file defines the resolution logic only. The skill that loads it decides what to *do* with the resolved profile.
 

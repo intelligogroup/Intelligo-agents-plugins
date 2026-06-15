@@ -1,7 +1,7 @@
 ---
 name: intelligo-risk-trends
 description: >-
-  Search and surface RISK TRENDS across an Intelligo Clarity client's own
+  Search and surface RISK TRENDS across an Intelligo client's own
   background-check reports — for Intelligo clients, including analysts. Patterns
   across many reports, not one. Use when the user wants: flags trending over time
   by level (Red/Yellow/Info); flags broken down by theme or specific finding;
@@ -12,7 +12,7 @@ description: >-
   finding content, not its config name. Trigger on "risk trends",
   "flag trends", "what risks are
   increasing", "break our flags down", "which reports mention X", "search across
-  profiles for…", even when Clarity isn't named. Pulls from Clarity via
+  profiles for…", even when Intelligo isn't named. Pulls from Intelligo via
   get_projects / get_profiles / get_report_content (plus aggregation and search
   tools when available); returns a chat summary + table, charts, or a dashboard.
 ---
@@ -21,7 +21,7 @@ description: >-
 
 ## What this skill is for
 
-Clarity users normally look at one report at a time. This skill works across
+Intelligo users normally look at one report at a time. This skill works across
 **many** reports at once to answer questions like "what's changing?", "where is
 risk concentrated?", and "which of our subjects touch X?". The user is an
 **Intelligo client** (some are analysts, some are not) working within **their own
@@ -40,9 +40,9 @@ two combined):
 4. **Across reports / subjects / products** — within the org, compare or rank flags/findings across reports, subjects, products, or entity type.
 5. **Cross-profile search** — find every profile/report whose findings mention a specific entity, keyword, location, or attribute (a person, company, country, sanction program, event…) — searching all findings, not just flagged ones.
 
-## Clarity data model (read this first)
+## Intelligo data model (read this first)
 
-Clarity exposes data through an MCP connector. The three tools you can rely on
+Intelligo exposes data through an MCP connector. The three tools you can rely on
 today, and two you should use **if present** (the team is building them):
 
 | Tool | Status | What it returns | Use it for |
@@ -92,14 +92,14 @@ before reporting "zero" vs "not subscribed". Headline metrics worth surfacing:
 Reports With Flags, Monitoring With Flags, Total Flags, and the Red/Yellow/Info split.
 
 **Always inspect the live tools before assuming.** The real connector may prefix
-names (e.g. `mcp__clarity__get_projects`) and the exact parameter and response
+names (e.g. `mcp__intelligo__get_projects`) and the exact parameter and response
 shapes will differ from this table. At the start of a task, look at the
 available `*project*`, `*profile*`, `*report*`, `*finding*`, and `*aggregate*`
 tools, read their schemas, and adapt. If `search_findings` / `aggregate_flags`
 are missing, fall back to the existing three tools (see Fallback below) and tell
 the user the analysis would be faster once those tools exist.
 
-If **no** Clarity tools are connected at all, say so plainly and stop — do not
+If **no** Intelligo tools are connected at all, say so plainly and stop — do not
 fabricate trend numbers.
 
 ## Defaults
@@ -138,7 +138,7 @@ table. Offer the richer formats rather than always producing them.
 
 - **Chat + table** (default): short narrative + a compact table (period, theme/finding, Red/Yellow/Info counts, change). Use plain-language theme names, not config codes. Show real names where a subject- or report-level breakdown is requested.
 - **Trend charts**: when the user wants to *see* the trend, render line/bar charts (flags over time by level, theme breakdown). Keep axis labels and the time window visible.
-- **Live dashboard artifact**: when the user wants something they'll revisit ("a page I can check each week"), build a persistent HTML artifact that re-pulls fresh Clarity data on open. Use `assets/dashboard_template.html` as the starting point — it already matches the **Clarity design system** (dark navy panels, teal accent, magenta Red / amber Yellow / blue Info flags; tokens in its `:root`) and mirrors the product dashboard: a KPI strip (Reports/Monitoring with flags, Total flags, Red/Yellow/Info with %) and donut breakdowns for **Flag Level, Product Type, Product** (all real fields), plus a **Flag Type / category** chart that calls `group_by:["category"]` — this is a *derived* field, so it renders only if the connector returns a category and otherwise falls back to an empty state (build the derived category server-side, or derive themes in chat). The **Flag Level** and **Product Type** donuts are **click-to-filter**: a click re-calls `aggregate_flags` with that filter applied across every panel (KPIs, other donuts, the trend, the category chart), with active-filter chips to clear. Keep the tokens for any new cards. Wire to the real tool names; probe each tool once in chat first to confirm its response shape.
+- **Live dashboard artifact**: when the user wants something they'll revisit ("a page I can check each week"), build a persistent HTML artifact that re-pulls fresh Intelligo data on open. Use `assets/dashboard_template.html` as the starting point — it already matches the **Intelligo design system** (dark navy panels, teal accent, magenta Red / amber Yellow / blue Info flags; tokens in its `:root`) and mirrors the product dashboard: a KPI strip (Reports/Monitoring with flags, Total flags, Red/Yellow/Info with %) and donut breakdowns for **Flag Level, Product Type, Product** (all real fields), plus a **Flag Type / category** chart that calls `group_by:["category"]` — this is a *derived* field, so it renders only if the connector returns a category and otherwise falls back to an empty state (build the derived category server-side, or derive themes in chat). The **Flag Level** and **Product Type** donuts are **click-to-filter**: a click re-calls `aggregate_flags` with that filter applied across every panel (KPIs, other donuts, the trend, the category chart), with active-filter chips to clear. Keep the tokens for any new cards. Wire to the real tool names; probe each tool once in chat first to confirm its response shape.
 
 ## Guardrails
 
@@ -165,7 +165,7 @@ User: "Anything new showing up in our checks lately?"
 
 **Example 4 — dashboard**
 User: "Give me a risk dashboard I can open every Monday."
-→ Live artifact from `assets/dashboard_template.html`, wired to the real Clarity tools, showing flags-over-time by level + a breakdown that refreshes on open.
+→ Live artifact from `assets/dashboard_template.html`, wired to the real Intelligo tools, showing flags-over-time by level + a breakdown that refreshes on open.
 
 ## Reference
 

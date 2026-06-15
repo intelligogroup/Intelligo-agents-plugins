@@ -1,4 +1,4 @@
-# Clarity tool contract (assumed)
+# Intelligo tool contract (assumed)
 
 This is the interface the skill is written against. Treat it as a target, not
 ground truth — at runtime, read the live tool schemas and adapt names/shapes.
