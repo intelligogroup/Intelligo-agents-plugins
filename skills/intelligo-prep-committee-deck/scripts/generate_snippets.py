@@ -34,10 +34,10 @@ findings.json schema:
   // info_flags: ONLY include when the analyst has explicitly elevated info
   // findings for the IC's attention. Info flags are skipped by default. When
   // included, each entry needs explanation + title; meta is optional.
-  // Rendered in Clarity's native style: circular teal 'i' badge + explanation
+  // Rendered in Intelligo's native style: circular teal 'i' badge + explanation
   // + titled item + meta line.
   "info_flags": [
-    {"explanation": "Why this info flag was raised by Clarity.",
+    {"explanation": "Why this info flag was raised by Intelligo.",
      "title": "Citrin Cooperman LLP (1996 – 1999)",
      "meta": "Accountant · 1996–1999 · 3 years · Source: Previous version of LinkedIn"}
   ],
@@ -154,11 +154,11 @@ body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; bac
 .findings-list .finding-item .fsum { font-size: 12px; line-height: 1.5; margin: 0; }
 """
 
-# Widget-mode CSS: matches the Intelligo Clarity light-theme design system.
+# Widget-mode CSS: matches the Intelligo light-theme design system.
 # Lavender page background, white cards with subtle borders and rounded
-# corners, indigo (#3D3FE2) primary accent, Clarity flag pills for severity
+# corners, indigo (#3D3FE2) primary accent, Intelligo flag pills for severity
 # (red / yellow / muted-info), no serif fonts. Designed to look native inside
-# the Clarity product AND to paste cleanly into light-themed IC slide decks.
+# the Intelligo product AND to paste cleanly into light-themed IC slide decks.
 WIDGET_CSS = """
 .intelligo-snippet-root { font-family: -apple-system, "Inter", "Segoe UI", Helvetica, Arial, sans-serif; background: #EAEAFF; padding: 22px; border-radius: 12px; color: #1B2631; }
 .intelligo-snippet-root .page-header { margin: 0 0 18px; }
@@ -315,7 +315,7 @@ def render_delta(delta):
       <ul>{disclosed_items}</ul>
     </div>
     <div class="delta-col">
-      <h4>Found by Clarity</h4>
+      <h4>Found by Intelligo</h4>
       <ul>{found_items}</ul>
     </div>
   </div>
@@ -384,7 +384,7 @@ def render_deal_headline(headline):
 def render_roster(subjects):
     """Project-level: subject-by-subject roster table.
 
-    Flag counts use Clarity's visual language: red pill (#E94E64 on white),
+    Flag counts use Intelligo's visual language: red pill (#E94E64 on white),
     yellow pill (#F0CE3F on dark), info badge (teal circular i + count).
     Pills are only rendered when count > 0 — zero-count flags are omitted.
 
@@ -428,7 +428,7 @@ def render_roster(subjects):
 def render_info_flags(items):
     """Detail view of analyst-elevated info findings.
 
-    Matches Clarity's native info-flag layout: circular teal 'i' badge to the
+    Matches Intelligo's native info-flag layout: circular teal 'i' badge to the
     left of each finding, with the explanation text, the titled item, and a
     meta line (role/date/source). Use only when the analyst has explicitly
     elevated an info finding for the IC — info flags are skipped by default.
@@ -536,7 +536,7 @@ def render(spec):
         subj = esc(spec.get("subject_name", ""))
         ent = f" / {esc(spec['subject_entity'])}" if spec.get("subject_entity") else ""
         title = f"IC Snippets — {subj}{ent}"
-        subtitle = (f"Clarity {esc(spec.get('report_level', ''))} · {esc(spec.get('report_date', ''))} · "
+        subtitle = (f"Intelligo {esc(spec.get('report_level', ''))} · {esc(spec.get('report_date', ''))} · "
                     f"Prepared by {esc(spec.get('prepared_by', ''))} · For {esc(spec.get('prepared_for', ''))}")
 
     header = f"""
@@ -608,7 +608,7 @@ def render_for_widget(spec):
         subj = esc(spec.get("subject_name", ""))
         ent = f" / {esc(spec['subject_entity'])}" if spec.get("subject_entity") else ""
         title = f"IC Snippets — {subj}{ent}"
-        subtitle = (f"Clarity {esc(spec.get('report_level', ''))} · {esc(spec.get('report_date', ''))} · "
+        subtitle = (f"Intelligo {esc(spec.get('report_level', ''))} · {esc(spec.get('report_date', ''))} · "
                     f"Prepared by {esc(spec.get('prepared_by', ''))} · For {esc(spec.get('prepared_for', ''))}")
 
     header = f"""

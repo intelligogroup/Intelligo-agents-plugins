@@ -1,6 +1,6 @@
 # [Subject Name] — One-Pager
 
-[Subject], [Role] · [Entity] · Clarity L[X] · [Date]
+[Subject], [Role] · [Entity] · Intelligo L[X] · [Date]
 
 **Flags:** 🔴 [N] · 🟡 [N] · ⚪ [N]
 
@@ -22,4 +22,4 @@
 
 ---
 
-*[Analyst initials] · [Date] · Clarity report: [link]*
+*[Analyst initials] · [Date] · Intelligo report: [link]*

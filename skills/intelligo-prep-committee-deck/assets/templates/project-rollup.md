@@ -82,4 +82,4 @@ Reports on **[Name], [Name], [Name]** had no red or yellow flags raised. Coverag
 
 ---
 
-*Full Clarity project: [link or project ID]. Individual reports linked from the platform.*
+*Full Intelligo project: [link or project ID]. Individual reports linked from the platform.*

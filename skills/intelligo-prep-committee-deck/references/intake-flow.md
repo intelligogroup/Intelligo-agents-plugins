@@ -13,7 +13,7 @@ Don't ask about firm type. It's a noisy proxy; behavioral questions predict form
 > Is this for one subject, a whole deal/project, or a deal with specific subject focus?
 
 Options:
-- Single subject (one Clarity report)
+- Single subject (one Intelligo report)
 - Whole project / deal rollup (every subject in the project)
 - Project rollup + deep dive on specific subjects
 
@@ -79,16 +79,16 @@ Why: this is the actual stylistic decision. A risk team picks all red/yellow upf
 
 ### Q4 — External enrichment (optional, ask before generating)
 
-> Want me to pull in anything from outside Clarity for this output? Pick any that fit:
+> Want me to pull in anything from outside Intelligo for this output? Pick any that fit:
 
 Options (multi-select):
 - **Recent news** — pull current news / press coverage on the subject from web search. Adds a "Recent news" snippet with date-bounded items, sourced.
-- **Public filings** — pull recent SEC filings, regulatory actions, or court records dated after the last Clarity refresh.
+- **Public filings** — pull recent SEC filings, regulatory actions, or court records dated after the last Intelligo refresh.
 - **Internal context (CRM / docs)** — pull deal notes, prior IC discussion, or relationship history from a connected CRM or knowledge tool (Salesforce, HubSpot, Notion, Confluence, etc.).
 - **Industry / peer context** — pull research on the subject's firm, sector, or peer GPs / sponsors from external sources.
-- **None — Clarity only.**
+- **None — Intelligo only.**
 
-This question is specifically about **non-Clarity** sources. Clarity-internal enrichment (comparing against a prior Clarity report for refresh-delta, or computing patterns across other subjects in the same project) is handled automatically in Step 3 of the core flow — the analyst doesn't need to ask for it.
+This question is specifically about **non-Intelligo** sources. Intelligo-internal enrichment (comparing against a prior Intelligo report for refresh-delta, or computing patterns across other subjects in the same project) is handled automatically in Step 3 of the core flow — the analyst doesn't need to ask for it.
 
 How to handle each:
 
@@ -98,9 +98,9 @@ How to handle each:
    - Public filings → "Recent filings" snippet, each entry sourced.
    - Internal context → "Internal context" snippet, attributed to the source system (e.g. "From Salesforce: opportunity notes, last updated Nov 10").
    - Industry / peer context → "Industry context" snippet.
-3. **Note in the output footer** what was pulled in. The IC should know whether the snippets are Clarity-only or enriched. Example footer: *"Enriched with: 2 web news items (Nov 1–18, 2025) · 1 SEC filing (Oct 28, 2025) · CRM notes from Salesforce."*
+3. **Note in the output footer** what was pulled in. The IC should know whether the snippets are Intelligo-only or enriched. Example footer: *"Enriched with: 2 web news items (Nov 1–18, 2025) · 1 SEC filing (Oct 28, 2025) · CRM notes from Salesforce."*
 
-If the user says "Clarity only," skip this step entirely and generate from Clarity data alone.
+If the user says "Intelligo only," skip this step entirely and generate from Intelligo data alone.
 
 ## Optional follow-ups (ask only if relevant)
 
@@ -134,6 +134,6 @@ Don't ask them four questions just to confirm. Ask zero. Generate. Show preview.
 
 - **Analyst says "just give me something, you decide":** pick the most common combination (partners audience + top-line lead + standard depth + snippets), generate, and offer to adjust after they see it.
 - **Analyst gives conflicting signals** (e.g. "for the board, full risk detail"): ask the one question that resolves the conflict — usually depth, since audience and lead-with rarely conflict.
-- **No MCP data available:** never ask for a Clarity report ID or project ID — analysts don't know those. Offer instead: (a) paste Clarity content as text, (b) attach a PDF export of the report, or (c) describe findings from memory (only viable for top-line / executive flavors). Then proceed with intake as normal. See SKILL.md "When Clarity MCP isn't available" for the full handling.
+- **No MCP data available:** never ask for an Intelligo report ID or project ID — analysts don't know those. Offer instead: (a) paste Intelligo content as text, (b) attach a PDF export of the report, or (c) describe findings from memory (only viable for top-line / executive flavors). Then proceed with intake as normal. See SKILL.md "When Intelligo MCP isn't available" for the full handling.
 
-- **MCP available but the analyst doesn't remember exact names:** search Clarity using whatever they remember — partial name, approximate date, deal context, GP name, fund vehicle. Show short lists with enough context (names, dates, roles, deal) for the analyst to recognize the right one. Never display internal IDs in the picker.
+- **MCP available but the analyst doesn't remember exact names:** search Intelligo using whatever they remember — partial name, approximate date, deal context, GP name, fund vehicle. Show short lists with enough context (names, dates, roles, deal) for the analyst to recognize the right one. Never display internal IDs in the picker.

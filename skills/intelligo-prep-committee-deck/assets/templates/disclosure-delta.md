@@ -1,9 +1,9 @@
 # [Subject Name] — Disclosure Delta
 
-**Headline:** [Factual one-liner. Examples: "All disclosed items confirmed by Clarity." / "Subject disclosed [N] items; Clarity found [N+M], so [M] items were not disclosed." / "All Clarity findings matched what was disclosed." No verdict words.]
+**Headline:** [Factual one-liner. Examples: "All disclosed items confirmed by Intelligo." / "Subject disclosed [N] items; Intelligo found [N+M], so [M] items were not disclosed." / "All Intelligo findings matched what was disclosed." No verdict words.]
 
 **Subject:** [Name], [Role] · [Entity]
-**Report:** Clarity L[X] · [Date]
+**Report:** Intelligo L[X] · [Date]
 
 ---
 
@@ -14,7 +14,7 @@
 | [e.g. Prior employment] | [e.g. Listed Company A 2018–2022] |
 | [e.g. Legal history] | [e.g. None disclosed] |
 
-## What Clarity found
+## What Intelligo found
 
 | Item | Detail | Source |
 |------|--------|--------|
@@ -30,10 +30,10 @@
 
 ## Matches (found, also disclosed)
 
-✅ [Item] — [Found in Clarity at [severity], also disclosed by subject.]
+✅ [Item] — [Found in Intelligo at [severity], also disclosed by subject.]
 
 ---
 
 **Coverage:** [Categories checked at this report level]
-**Note:** Clarity does not assess intent. The IC decides what each gap means.
+**Note:** Intelligo does not assess intent. The IC decides what each gap means.
 

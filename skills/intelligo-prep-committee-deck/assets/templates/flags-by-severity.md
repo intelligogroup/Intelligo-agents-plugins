@@ -1,7 +1,7 @@
 # [Subject Name] — Flag-by-Flag Review
 
 **Subject:** [Name], [Role] · [Entity]
-**Report:** Clarity L[X] · Coverage: [Jurisdictions]
+**Report:** Intelligo L[X] · Coverage: [Jurisdictions]
 **Prepared for:** [Risk team / GC] · [Date]
 
 ---
@@ -29,7 +29,7 @@
 - **Source:** [Link + date]
 - **Jurisdiction:** [Country / state / county]
 - **Date of underlying event:** [When the event happened]
-- **Analyst note from Clarity:** [Verbatim if present; omit section if none]
+- **Analyst note from Intelligo:** [Verbatim if present; omit section if none]
 - **Suggested IC question:** [What to ask, tied to the finding]
 
 [Repeat per red flag. Never include a flag entry without finding text — generic flag titles aren't sufficient.]
@@ -52,4 +52,4 @@
 
 ## Methodology
 
-[1 paragraph: how Clarity gathered the data, what the report level means, any consent or jurisdictional limits.]
+[1 paragraph: how Intelligo gathered the data, what the report level means, any consent or jurisdictional limits.]

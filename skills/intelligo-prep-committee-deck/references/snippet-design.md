@@ -4,7 +4,7 @@ Design goals and pattern catalog for the inline snippet canvas. The actual CSS, 
 
 ## Design goals
 
-- **Match Clarity's light theme** so the widget feels native to the product brand (lavender page, white cards, indigo accents, Clarity flag pills for severity).
+- **Match Intelligo's light theme** so the widget feels native to the product brand (lavender page, white cards, indigo accents, Intelligo flag pills for severity).
 - **Paste cleanly into IC slide decks.** PowerPoint, Google Slides, Word, and Notion all preserve inline-styled HTML on paste. So snippets ship as styled HTML and the analyst's slide picks up the styling intact.
 - **Each block stands alone.** Headers, content, and source attribution on every block — so the analyst can copy any one block independently and it makes sense in isolation.
 
@@ -28,7 +28,7 @@ Subject-level patterns (any scope):
 - **C. Disclosure delta** — two-column (disclosed | found) + red-accented gap callout below.
 - **D. Executive paragraph** — narrative paragraph styled as a pull-quote with indigo accent.
 - **E. Coverage map** — categories checked, with check or dash and brief detail.
-- **I. Info findings detail** — Clarity-native circular teal "i" badge + explanation + titled item + meta line. Rendered only when the analyst elevates info findings.
+- **I. Info findings detail** — Intelligo-native circular teal "i" badge + explanation + titled item + meta line. Rendered only when the analyst elevates info findings.
 
 Project-scope-only patterns:
 

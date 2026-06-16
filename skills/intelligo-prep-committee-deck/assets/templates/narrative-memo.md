@@ -1,7 +1,7 @@
 # [Subject Name] — IC Background Diligence Memo
 
 **Subject:** [Name], [Role] · [Entity]
-**Report:** Clarity Advantage Level [X] · Published [Date] · Coverage: [Jurisdictions]
+**Report:** Intelligo Advantage Level [X] · Published [Date] · Coverage: [Jurisdictions]
 **Prepared by:** [Analyst] · For: [IC name] · [Date]
 
 ---
@@ -30,7 +30,7 @@
 
 **Red — [Finding title].** [What was specifically found, in a complete sentence with context: dates, amounts, jurisdiction, what happened.] Source: [attribution, date].
 
-[Analyst note (verbatim from Clarity if present): "Analyst note: [text]"]
+[Analyst note (verbatim from Intelligo if present): "Analyst note: [text]"]
 
 ### Yellow findings
 
@@ -45,7 +45,7 @@
 ## Disclosure delta *(include only if disclosed-vs-found data is present)*
 
 **Disclosed by [subject term]:** [list]
-**Found by Clarity:** [list]
+**Found by Intelligo:** [list]
 **Gaps:** [list items found that were not disclosed. Severity tag each, but no verdict on whether the gap is "material" — that's the IC's call.]
 
 ---
@@ -64,4 +64,4 @@
 
 ---
 
-*Full Clarity report: [link or ID]. This memo summarizes findings; refer to the platform for source documents.*
+*Full Intelligo report: [link or ID]. This memo summarizes findings; refer to the platform for source documents.*

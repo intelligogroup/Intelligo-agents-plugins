@@ -17,7 +17,7 @@ The no-judgement and no-flag-without-finding rules from SKILL.md apply to every 
 1. **Top bar:** subject (or deal), report level, date, flag count summary (e.g. "1 red · 3 yellow · 12 info").
 2. **The highest-severity finding** (1 short paragraph, 2–3 sentences): the actual finding behind the most severe flag, including what specifically was found, source, date.
 3. **Other red and yellow flags** (1 line each): severity + finding text + source.
-4. **Footer:** Clarity report link, analyst initials.
+4. **Footer:** Intelligo report link, analyst initials.
 
 **Tone:** Telegraphic. Bullets and short sentences only. Verbs, not adjectives. Factual, no judgement adjectives ("major", "critical", "serious") — let the severity level and the finding text do the work.
 
@@ -53,7 +53,7 @@ The no-judgement and no-flag-without-finding rules from SKILL.md apply to every 
 
 **Structure:**
 
-1. **Headline:** factual description of the delta, no judgement words. "All disclosed items confirmed by Clarity" / "Items found that were not disclosed: [count]" / "Subject disclosed [X]; Clarity found [Y additional items]."
+1. **Headline:** factual description of the delta, no judgement words. "All disclosed items confirmed by Intelligo" / "Items found that were not disclosed: [count]" / "Subject disclosed [X]; Intelligo found [Y additional items]."
 2. **What was disclosed by the subject** (table or list).
 3. **What we found** (parallel table or list).
 4. **Gaps** (red box): items found that weren't disclosed. Each gap rated material / non-material with reasoning.
@@ -75,7 +75,7 @@ The no-judgement and no-flag-without-finding rules from SKILL.md apply to every 
 **Structure:**
 
 1. **Header:** subject, report level, scope, coverage map.
-2. **Red flags** (full detail each): severity level, finding title, finding text (what was found, when, where), source link, jurisdiction, analyst note (verbatim from Clarity if present), suggested IC question.
+2. **Red flags** (full detail each): severity level, finding title, finding text (what was found, when, where), source link, jurisdiction, analyst note (verbatim from Intelligo if present), suggested IC question.
 3. **Yellow flags** (same format, shorter).
 4. **Info flags** (summarized in a table — title + source).
 5. **Methodology and limits.**
