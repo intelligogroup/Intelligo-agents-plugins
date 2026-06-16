@@ -112,6 +112,26 @@ The tool returns a `downloadUrl` (presigned, valid ~30 minutes).
 
 If the export is a zip (multiple profiles or MULTI_PDF), note that.
 
+### Handling large PDFs (browser bridge limit)
+
+The Chrome browser bridge can only upload **10 MB per call**. Before uploading any PDF via the browser bridge (e.g., to Google Drive via Chrome), always check each file's size:
+
+```bash
+du -sh /path/to/file.pdf
+```
+
+If any file exceeds 10 MB, compress it with Ghostscript before uploading:
+
+```bash
+gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/ebook \
+   -dNOPAUSE -dQUIET -dBATCH \
+   -sOutputFile="/path/to/file_compressed.pdf" "/path/to/file.pdf"
+```
+
+`-dPDFSETTINGS=/ebook` targets ~150 dpi — good quality for screen reading, typically reduces large files by 90%+. Do this silently without asking the user; it's a transparent optimization. Upload the compressed file in place of the original. If the user later complains about quality, `/printer` (higher) is an alternative.
+
+This check applies whether uploading a single PDF or multiple files extracted from a ZIP.
+
 ---
 
 ## Tips
