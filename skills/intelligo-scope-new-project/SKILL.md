@@ -25,8 +25,6 @@ Two tool calls (plus optional `classify_subject_sector` as a lookup helper). Eve
 
 ### 1. RESOLVE
 
-> Internal/admin users scoping on behalf of another org, or testers whose own org isn't in the catalog, use `onBehalfOfClientId`. If — and only if — the user invokes it, see `reference/on-behalf-of.md`: it must be forwarded on every call and has integrity rules that throw if dropped mid-conversation. Never offer it to regular users.
-
 **Start with `getProfiles` when it's in the session — it determines the quality of everything downstream.** Concretely:
 
 1. Call Clarity's `getProfiles` tool with `profileType: "company"` and the subject name as `query`.
@@ -69,6 +67,8 @@ Call `get_scoping_area`. Two response shapes:
 - `source: "default"` — backend chose for the user. Disclose in one sentence and offer the options; a wrong assumption silently runs the recommendation against the wrong cell-history slice. Anchor the disclosure in language the client can verify against their own data, not Intelligo's internal tokens. When `getProfiles` gave you an upstream phrase (usually Clarity's `industry` field), quote it and say how you mapped it — *"Per Clarity, Aldebaran is tagged 'Investment Management' — I mapped that to a fund-manager engagement (vs. operating company or M&A advisory). Tell me if that's wrong."* Only cite corroborating sources (website, CRD, SEC category) you actually retrieved. For defaults with no clean upstream phrase, state the default plainly: *"I'm treating this as general advisory rather than a specific M&A / capital-markets / restructuring deal, and scoping only the principal."*
 
 Then present the area itself: use `area.kpLevelLabel` for the seniority tier (never the raw `area.kpLevel` token), and write a one-sentence rationale from `area.rationaleContext` anchored on the client's name and history. **Phrase counts as upper bounds, not commitments** — *"up to 5 key persons"*, not *"5 key persons"*. The recommendation is what we aim for; the final size depends on what Workforce + the company website actually surface, and short rolls aren't padded with placeholders. Vary voice by `rationaleContext.confidence` — assertive when `high` (e.g. *"Anchored in Hamilton Lane's history scoping fund managers — across 260 prior engagements they typically scope up to 5 key persons and 1 company at the GP partners / MDs tier."*), hedged when `low` (*"With only 3 prior engagements of this kind, the recommendation leans on the broader industry benchmark…"*). A full worked example (IB engagement on Acme Corp, with the `assumptions` JSON and a sample disclosure sentence) is in `reference/assumption-mapping.md`.
+
+**If the response carries `clientResolution: "default"`,** this org isn't in our history yet — say so plainly and note you're using Intelligo's default benchmarks rather than the org's own track record (e.g. *"This looks like the first time we're scoping for your organization, so I'm leaning on our default benchmarks rather than your own history."*).
 
 **Lead the verification with the firm's identity, not just numbers.** State `context.primarySubjectName`, and when `context.primarySubjectWebsite` is set include it verbatim — the URL is what lets the user confirm you're scoping the right firm before any work happens (different "Achieve Partners" firms exist; the website disambiguates). Example: *"Scoping **Achieve Partners** (https://www.achievepartners.com/) — workforce-training-focused middle-market PE in NY. Recommendation: up to 5 key persons + 1 company at the GP partners / MDs tier. Sound right?"* If the user says no or names a different firm, re-call `get_scoping_area` with the corrected name/website.
 
@@ -137,7 +137,6 @@ You may add public-context color around the recommendation — what you know abo
 
 ## Reference files
 
-- `reference/on-behalf-of.md` — the `onBehalfOfClientId` override: who uses it, forwarding rules, the integrity check that throws if dropped. Only relevant for internal/admin/test callers.
 - `reference/assumption-mapping.md` — the `assumptions.X.value → get_scoping_profiles input-field` map, plus a full worked IB/Acme example for step 2.
 - `reference/json-edits.md` — row shapes and per-request recipes for the step-4 edit cookbook.
 
