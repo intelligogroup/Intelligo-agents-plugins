@@ -107,7 +107,7 @@ The response carries:
 
 You may go over/under `recommendedPersonCount` with a stated reason. If the pool is short, say *"adding more is possible — share any names and I'll fold them in."*
 
-**Show the jurisdiction(s) next to every row you present.** Render them inline so the user can spot a wrong-jurisdiction inclusion before ordering — persons from their `jurisdictions` array (listing all codes when more than one), entities from the company's operating countries, HQ first. E.g. *"Nancy Curtin — Interim CEO · GB, US"*. The field is always the `jurisdictions` array — shape in `reference/json-edits.md`.
+**Show the jurisdiction(s) next to every row you present.** Render them inline so the user can spot a wrong-jurisdiction inclusion before ordering. Use the FORMAL `jurisdictions` array — for a person, everywhere they actually lived/worked (own location + operating jobs, so it may be SEVERAL countries), EXCLUDING countries where they only hold a board seat. E.g. *"Nancy Curtin — Interim CEO · GB"* or a cross-border operator *"· GB, US"*. A person may also carry `additionalJurisdictions` (countries from their board seats / other-org roles, e.g. a US investor on NZ + Israeli boards): these are OPTIONAL context — mention them only if relevant (*"also sits on boards in NZ, IL"*) and do NOT put them in the formal `jurisdictions`. The submitted field is always the `jurisdictions` array — shape in `reference/json-edits.md`.
 
 Then add a one-line coverage footprint under the list — *"Coverage: US (5), UK (1)."* (Per-person jurisdiction needs `enrich:true`; without it, fall back to the company's country for everyone, or omit the per-person tag and show only the company-level footprint.)
 
