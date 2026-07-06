@@ -59,32 +59,25 @@ With a resolved `primarySubjectId`, `get_scoping_profiles` returns real candidat
 
 ### 2. ESTIMATE area
 
-Call `get_scoping_area`. Two response shapes:
+Call `get_scoping_area`.
 
-**`status: "ready"`** — the typical case. Carries `area`, `context`, and `assumptions`. **Disclose the `assumptions` before presenting the area:**
+**`status: "ready"`** — the typical case. This is NOT a parameters-approval step. The user wants the bottom line — who to run and the reasoning — not a review of counts, tiers, and classifications. So give a **short, plain-language read of the projected scope size and why**, then go **straight on to `get_scoping_profiles`** to produce the actual people. Only stop to ask something when it's genuinely crucial — a question whose answer would materially change who gets scoped (the `needs_clarification` cases below are exactly those).
 
-- `source: "explicit"` — you supplied this value; no disclosure needed.
-- `source: "default"` — backend chose for the user. Disclose in one sentence and offer the options; a wrong assumption silently runs the recommendation against the wrong cell-history slice. Anchor the disclosure in language the client can verify against their own data, not Intelligo's internal tokens. When `getProfiles` gave you an upstream phrase (usually Clarity's `industry` field), quote it and say how you mapped it — *"Per Clarity, Aldebaran is tagged 'Investment Management' — I mapped that to a fund-manager engagement (vs. operating company or M&A advisory). Tell me if that's wrong."* Only cite corroborating sources (website, CRD, SEC category) you actually retrieved. For defaults with no clean upstream phrase, state the default plainly: *"I'm treating this as general advisory rather than a specific M&A / capital-markets / restructuring deal, and scoping only the principal."*
+Say it in human terms, not internal tokens:
+- The size as an upper bound and the seniority tier in plain words — use `area.kpLevelLabel` (never the raw `area.kpLevel`): *"up to 5 key people plus the company, at the partner / MD level."*
+- The report depth from `area.recommendedReportLevel` in plain words (*"a standard-depth check"*), leaning on the client's own history when there is some and calling it a general benchmark when there isn't (`clientResolution: "default"`, or low `confidence`).
+- Anchor the reason briefly on the client where you can (*"based on how [client] has scoped fund managers before"*).
+- **Skip anything that isn't meaningful to the user.** If a classification came back as a catch-all like `Other / Unclassified`, or any value they can't act on, just don't mention it — never surface internal category strings.
 
-Then present the area itself: use `area.kpLevelLabel` for the seniority tier (never the raw `area.kpLevel` token), and write a one-sentence rationale from `area.rationaleContext` anchored on the client's name and history. **Phrase counts as upper bounds, not commitments** — *"up to 5 key persons"*, not *"5 key persons"*. The recommendation is what we aim for; the final size depends on what Workforce + the company website actually surface, and short rolls aren't padded with placeholders. Vary voice by `rationaleContext.confidence` — assertive when `high` (e.g. *"Anchored in Hamilton Lane's history scoping fund managers — across 260 prior engagements they typically scope up to 5 key persons and 1 company at the GP partners / MDs tier."*), hedged when `low` (*"With only 3 prior engagements of this kind, the recommendation leans on the broader industry benchmark…"*). A full worked example (IB engagement on Acme Corp, with the `assumptions` JSON and a sample disclosure sentence) is in `reference/assumption-mapping.md`.
+Lead with the firm's identity so a wrong entity is caught in passing — name + `primarySubjectWebsite` when set — but don't make it a gate. E.g. *"Scoping **Achieve Partners** (achievepartners.com) — up to 5 key people + the company, standard depth, based on your past fund-manager work. Pulling the names now…"* — then call `get_scoping_profiles`. (If the user later says it's the wrong firm, or wants a different size / tier, re-call `get_scoping_area` with the correction; the `assumption → slot` map is in `reference/assumption-mapping.md`.)
 
-**If the response carries `clientResolution: "default"`,** this org isn't in our history yet — say so plainly and note you're using Intelligo's default benchmarks rather than the org's own track record (e.g. *"This looks like the first time we're scoping for your organization, so I'm leaning on our default benchmarks rather than your own history."*).
-
-**Lead the verification with the firm's identity, not just numbers.** State `context.primarySubjectName`, and when `context.primarySubjectWebsite` is set include it verbatim — the URL is what lets the user confirm you're scoping the right firm before any work happens (different "Achieve Partners" firms exist; the website disambiguates). Example: *"Scoping **Achieve Partners** (https://www.achievepartners.com/) — workforce-training-focused middle-market PE in NY. Recommendation: up to 5 key persons + 1 company at the GP partners / MDs tier. Sound right?"* If the user says no or names a different firm, re-call `get_scoping_area` with the corrected name/website.
-
-Also surface `area.recommendedReportLevel` in the same rationale — it's the canonical 3-tier (basic / medium / full) report-depth call, blended over the client's own history in this sector. Lead with `level`, frame voice by `confidence` and `basis` (high + basis="client" → *"…and at basic depth, your typical for fund managers"*; low or basis≠"client" → *"…at basic depth as a sector benchmark — you have no prior engagements of this kind to anchor on"*), and disclose `distribution` when the modal tier is bimodal (e.g. a 41/00/59 split → *"…though your past Fund-Manager engagements split 40% basic / 60% full, so let me know if you want to go deeper"*).
-
-If the user corrects an assumption, re-call `get_scoping_area` with the corrected value in the matching input slot (the `assumption → slot` map is in `reference/assumption-mapping.md`).
-
-**`status: "needs_clarification"`** — only two cases. Relay the question, get the answer, re-call:
-- `asking: "primary_subject_name"` — you didn't pass a subject name. Ask which company.
-- `asking: "subject_type"` — Pattern B (Asset Manager) client where the fund / opco / IB-advisory distinction was too consequential to default. Three options come back; relay them and re-call with the answer in `subjectTypeConfirmed`.
-
-When the user wants the area itself to change ("make it 5 persons instead of 3"), re-call `get_scoping_area` — don't fabricate the new envelope.
+**`status: "needs_clarification"`** — the crucial-question cases. Relay, get the answer, re-call:
+- `asking: "primary_subject_name"` — no subject name was given. Ask which company.
+- `asking: "subject_type"` — Pattern B (Asset Manager) client where the fund / opco / IB-advisory distinction is too consequential to guess. Relay the three options, re-call with the answer in `subjectTypeConfirmed`.
 
 ### 3. POPULATE candidates and SELECT the key persons
 
-Once the user approves the area, call `get_scoping_profiles` with:
+Call `get_scoping_profiles` with (no separate approval needed — you came straight here after the size read):
 
 - `area` + `context` — pass through verbatim from `get_scoping_area`.
 - **The resolved pattern-cascade values from step 2's `assumptions`.** Forward the `value` of every assumption that appeared, regardless of `source` (both `'explicit'` and `'default'` matter). See `reference/assumption-mapping.md` for the `assumptions.X.value → input-field` map.
@@ -96,18 +89,18 @@ The response carries:
 - **`companies`** — the FIXED company entities (primary target + any IB counterparty / PE_LMM add-on). Include as-is; you don't choose among these.
 - **`candidates`** — the key-person POOL (up to 15) eligible at the area's `kpLevel`, **pre-ordered by a backend prior** (this client's historical layer pattern → corroboration → tenure). The order is a *starting point*, not a verdict: **you select** the final set — the backend ranks layers, it does not decide *which specific* people run.
 - **`recommendedPersonCount`** — how many key persons to actually run.
-- **`recommendedReportLevel`** — echoed from step 2; re-surface it in the final summary using the same `basis` / `confidence` / `distribution` framing.
+- **`recommendedReportLevel`** — echoed from step 2; re-surface the report depth in plain words in the final summary.
 
-**Select `recommendedPersonCount` key persons from `candidates`** to run; the rest stay the swap pool. The pool already arrives ordered by the backend prior (layer pattern → corroboration → tenure), so the *layer mix* is handled — **don't just re-derive that or take the top N.** Your job is the judgment the prior can't do; treat the order as a strong starting point, not a list to obey:
+**Recommend `recommendedPersonCount` key persons from `candidates`** as the core set to run. The rest are **additional candidates the user can ADD on top** (growing the scope), not just trade-ins. The pool already arrives ordered by the backend prior (layer pattern → corroboration → tenure), so the *layer mix* is handled — **don't just re-derive that or take the top N.** Your job is the judgment the prior can't do; treat the order as a strong starting point, not a list to obey:
 
 - **Pick the right *specific* person within the favoured layers.** The prior says which tiers this client scopes; you decide *which* of them matter for THIS subject — read each candidate's enriched profile (current role, career, tenure, how central or well-known they are), not the layer alone. Two people in the same layer (e.g. a founder-CEO who runs the firm vs a founder who's now a ceremonial chairman) are very different DD subjects.
 - **Function beats redundant founders — the prior can't see this, so you must.** The backend orders by *layer*, and founders are a high-inclusion layer, so multiple founders tend to cluster at the top. That over-counts governance founders. Rule: seat the **operating CFO** and the **head of the core business line** (credit / investing / lending — whatever the firm actually does) **ahead of a second or third founder whose current role is governance** (non-exec chairman, board-only, "advisor", emeritus). One operating founder is almost always in; a 2nd/3rd founder who only sits on the board is not — prefer the executive who runs money or controls the books over them. Read each founder's *current* role to tell operating from governance; don't infer it from the `founder` flag.
 - **Drop wrong-person matches** — if an enriched profile's career shows no real tie to the subject, exclude it (don't run a same-name stranger) and say so.
 - **Adjust for the subject and the conversation** — seat a role the general pattern wouldn't (the GC for a litigation-heavy deal, the CTO for a tech DD), honour what the analyst asks, and always include genuinely DD-critical roles (operating founder / `isFounder`, CEO / CFO, the head of the core business line) even when they sit lower in the order.
 
-You may go over/under `recommendedPersonCount` with a stated reason. If the pool is short, say *"adding more is possible — share any names and I'll fold them in."*
+You may go over/under `recommendedPersonCount` with a stated reason — **adding more from the pool is a normal, first-class action** (the user can grow the set), not only swapping. If the pool is short, say *"adding more is possible — share any names and I'll fold them in."*
 
-**Show the jurisdiction(s) next to every row you present.** Render them inline so the user can spot a wrong-jurisdiction inclusion before ordering. Use the FORMAL `jurisdictions` array — for a person, everywhere they actually lived/worked (own location + operating jobs, so it may be SEVERAL countries), EXCLUDING countries where they only hold a board seat. E.g. *"Nancy Curtin — Interim CEO · GB"* or a cross-border operator *"· GB, US"*. A person may also carry `additionalJurisdictions` (countries from their board seats / other-org roles, e.g. a US investor on NZ + Israeli boards): these are OPTIONAL context — mention them only if relevant (*"also sits on boards in NZ, IL"*) and do NOT put them in the formal `jurisdictions`. The submitted field is always the `jurisdictions` array — shape in `reference/json-edits.md`.
+**Present every person as `name + role + jurisdiction(s)` — never a bare name.** This applies to the recommended set AND the additional candidates: the role/title is essential context. Render the jurisdiction(s) inline so the user can spot a wrong-jurisdiction inclusion before ordering. Use the FORMAL `jurisdictions` array — for a person, everywhere they actually lived/worked (own location + operating jobs, so it may be SEVERAL countries), EXCLUDING countries where they only hold a board seat. E.g. *"Nancy Curtin — Interim CEO · GB"* or a cross-border operator *"· GB, US"*. A person may also carry `additionalJurisdictions` (countries from their board seats / other-org roles, e.g. a US investor on NZ + Israeli boards): these are OPTIONAL context — mention them only if relevant (*"also sits on boards in NZ, IL"*) and do NOT put them in the formal `jurisdictions`. The submitted field is always the `jurisdictions` array — shape in `reference/json-edits.md`.
 
 Then add a one-line coverage footprint under the list — *"Coverage: US (5), UK (1)."* (Per-person jurisdiction needs `enrich:true`; without it, fall back to the company's country for everyone, or omit the per-person tag and show only the company-level footprint.)
 
@@ -115,7 +108,7 @@ Then add a one-line coverage footprint under the list — *"Coverage: US (5), UK
 
 **You own the returned JSON from here on.** Modifications — adding, removing, swapping, excluding — happen in conversation, not via another tool call. Re-calling `get_scoping_profiles` rebuilds from scratch, losing your edits and burning a fresh Workforce lookup.
 
-The mechanics: your edits move people between the **selected key persons** and the **candidate pool**, add user-named people, and relabel roles. **The one rule to get right: when the user says "Mike, the CFO" or "the founders Alice and David", split `{name, role}` into separate fields — never merge the phrase into `name` (the backend sorts on `role`).** The full rationale, the role-broadcast detail, and the row shapes are in `reference/json-edits.md`.
+The mechanics: your edits **add** candidates from the pool on top of the recommended set (growing the scope), move people between the selected set and the pool, add user-named people, and relabel roles. **The one rule to get right: when the user says "Mike, the CFO" or "the founders Alice and David", split `{name, role}` into separate fields — never merge the phrase into `name` (the backend sorts on `role`).** The full rationale, the role-broadcast detail, and the row shapes are in `reference/json-edits.md`.
 
 For the exact row shapes and the recipe for each common request (add / drop / swap / exclude-by-role / relabel / add a related entity + its officers / add a parent with no officers), see `reference/json-edits.md`.
 

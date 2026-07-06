@@ -2,7 +2,7 @@
 
 **You own the returned JSON from here on.** All edits happen in conversation, not via another tool call — re-calling `get_scoping_profiles` rebuilds from scratch, losing your edits and burning a fresh Workforce lookup.
 
-The response gives you `companies` (fixed) + a `candidates` pool (≤15) + `recommendedPersonCount`. You SELECT `recommendedPersonCount` key persons from `candidates` to run; the rest stay the pool. "Editing" = moving people between your selected set and the pool, adding user-named people, and relabeling roles. Rank the pool by tenure (`roleStartDate` / `companyJoinDate`), role seniority, `isFounder`, and the client's layer pattern — and drop obvious wrong-person matches.
+The response gives you `companies` (fixed) + a `candidates` pool (≤15) + `recommendedPersonCount`. You recommend `recommendedPersonCount` key persons from `candidates` as the core set; the rest are additional candidates the user can ADD on top (or swap in). "Editing" = moving people between your selected set and the pool, adding user-named people, and relabeling roles. Rank the pool by tenure (`roleStartDate` / `companyJoinDate`), role seniority, `isFounder`, and the client's layer pattern — and drop obvious wrong-person matches.
 
 ## Row shapes
 
@@ -32,11 +32,11 @@ User-named persons you add get `source: "client_input"`, `confidence: 1.0`. The 
 
 - **Initial selection** → from `candidates`, pick `recommendedPersonCount` to run (your selected set); leave the rest as the pool. Choose by tenure / role seniority / `isFounder` / the client's pattern, and skip wrong-person matches (enriched career shows no tie to the subject).
 
-- **"Add Mike, the CFO"** → add a key-person row to your selected set (shape below). To stay at `recommendedPersonCount`, move your weakest current pick back to the pool.
+- **"Add Mike, the CFO" / "also add [name]"** → add a key-person row to the selected set (shape below). This GROWS the scope — do NOT auto-drop someone to hold the count; only move a current pick back to the pool if the user asks to keep the number the same.
 
 - **"Drop the CIO" / "Remove [Name]"** → move that person from the selected set back to the pool; promote the next-best pool candidate to hold the count.
 
-- **"Show me other options"** → present the strongest unselected `candidates` (you already hold their enriched detail). A swap = move one in, one out.
+- **"Show me other options"** → present the strongest unselected `candidates` (you already hold their enriched detail), each as **name + role + jurisdiction** (never a bare name list). A swap = move one in, one out.
 
 - **"Skip the board" / "No operators" / "Exclude [role]"** → drop selected people whose `role` matches; backfill from the pool with non-matching candidates until back at `recommendedPersonCount` or the pool is exhausted. If you run out, tell the user the count came in low (e.g. "only 3 non-board candidates in the pool — widen to KP_FULL_OFFICERS?").
 
