@@ -4,3 +4,7 @@
 # Local, machine-specific Claude Code settings (not for distribution)
 **/.claude/settings.local.json
 .claude/settings.local.json
+
+# Python bytecode
+__pycache__/
+*.pyc

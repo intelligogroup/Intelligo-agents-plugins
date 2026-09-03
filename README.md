@@ -10,14 +10,14 @@ risk flags, comparisons, and portfolio-wide trends, grounded in your own data.
 **Claude Code**
 
 ```bash
-claude plugin marketplace add intelligogroup/intelligo-connector
+claude plugin marketplace add intelligogroup/Intelligo-agents-plugins
 claude plugin install intelligo@intelligo-tools
 ```
 
 Or from an interactive session:
 
 ```
-/plugin marketplace add intelligogroup/intelligo-connector
+/plugin marketplace add intelligogroup/Intelligo-agents-plugins
 /plugin install intelligo@intelligo-tools
 ```
 
@@ -27,7 +27,7 @@ connector: **Settings → Connectors → Add** → `https://clarityapi.intelligo
 **Gemini CLI**
 
 ```bash
-gemini extensions install https://github.com/intelligogroup/intelligo-connector
+gemini extensions install https://github.com/intelligogroup/Intelligo-agents-plugins
 ```
 
 ## What you get
