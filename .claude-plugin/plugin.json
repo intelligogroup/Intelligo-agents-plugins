@@ -2,7 +2,7 @@
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "intelligo",
   "displayName": "Intelligo",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Connect Claude to Intelligo for risk intelligence — background checks, credit checks, and adverse-media and social screening.",
   "author": {
     "name": "Intelligo Group",
@@ -10,6 +10,9 @@
   },
   "homepage": "https://github.com/intelligogroup/Intelligo-agents-plugins",
   "repository": "https://github.com/intelligogroup/Intelligo-agents-plugins",
+  "license": "Apache-2.0",
+  "privacyPolicyUrl": "https://intelligo.ai/privacy",
+  "icon": "./assets/icon.png",
   "mcpServers": "./.mcp.json",
   "skills": "./skills"
 }
