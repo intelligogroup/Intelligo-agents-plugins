@@ -60,14 +60,12 @@ Both are generated from the same findings spec — same content, two surfaces. T
 
 Workflow:
 
-1. Build the findings spec (JSON shape documented in `scripts/generate_snippets.py`).
-2. Generate **both** outputs:
-   ```bash
-   # widget version (no html/head/body wrapper, for show_widget)
-   python3 scripts/generate_snippets.py --widget findings.json /tmp/widget.html
-   # standalone version (full HTML document, for present_files)
-   python3 scripts/generate_snippets.py findings.json outputs/ic-snippets-<subject_slug>-<date>.html
-   ```
+1. Build the findings spec (the JSON shape in `references/snippet-html.md`).
+2. Write **both** outputs yourself from that spec, following `references/snippet-html.md` exactly: its rules for which cards appear and in what order, its card markup, and its CSS and copy script copied whole. No script is run.
+   - the widget version: no html/head/body wrapper, styles scoped under `.intelligo-snippet-root`, for `show_widget`
+   - the standalone version: a full HTML document saved as `outputs/ic-snippets-<subject_slug>-<date>.html`, for `present_files`
+
+   Both come from the same spec, so their cards and text must be identical. Do not restyle, reorder or reword the cards, and do not add a verdict.
 3. Render the widget version via `show_widget` with a descriptive title like `ic_snippets_<subject_slug>`.
 4. Present the file version via `present_files` so the analyst gets a clickable card pointing to the HTML file.
 5. Tell the analyst: Copy buttons in the widget paste with formatting preserved; the card opens the same content in the browser if they want a full-page view or to share the file.
@@ -101,4 +99,4 @@ Use the `pdf` skill. Single document per the chosen flavor. Always include: cove
 - `references/flavors.md` — flavor catalog + audience × lead-with mapping table
 - `references/snippet-design.md` — visual spec for snippets
 - `assets/templates/` — markdown skeletons per flavor (for PDF/PPTX rendering)
-- `scripts/generate_snippets.py` — widget renderer; canonical source for snippet HTML structure and JSON schema
+- `references/snippet-html.md` — the findings spec, the rendering rules, the card markup, and the CSS and copy script for both outputs; the source of truth for snippet HTML

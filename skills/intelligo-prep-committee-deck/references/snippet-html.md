@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
-"""
-Generate styled IC snippets HTML from a JSON spec of findings.
+# Snippet HTML reference
 
-Usage:
-    python generate_snippets.py findings.json output.html
+How to write the IC snippet canvas. You write the HTML yourself, from a findings spec, following this file exactly. The styling, the markup and the rules here are the source of truth; do not invent other styling, cards or wording.
 
-findings.json schema:
+## 1. Build the findings spec first
+
+Collect what you will show into this shape before writing any HTML. It keeps the two outputs (widget and file) identical in content.
+
+```
 {
   "scope": "subject" | "project" | "hybrid",   // drives which patterns render
 
@@ -70,28 +71,256 @@ findings.json schema:
      "summary": "Finding text — what was found, when, where, source."}
   ]
 }
+```
 
-For hybrid scope, include BOTH the project-level fields and the subject-level
-fields for the subject(s) being deep-dived. The script will render project
-blocks first, then subject blocks.
+For hybrid scope, include both the project-level fields and the subject-level fields for the subject being looked at in depth.
 
-Severity-only policy:
-  Intelligo only assigns severity to findings (red / yellow / info). The
-  schema deliberately omits any "verdict" or "judgement" field. The skill
-  describes findings + severity; the IC interprets what they mean. This is
-  enforced by the schema, not just convention.
+Severity-only policy: Intelligo only assigns severity to findings (red / yellow / info). The spec has no verdict or judgement field, and the output never adds one. The skill states findings and severity; the committee decides what they mean.
 
-The script writes a single self-contained HTML file with copy-to-clipboard
-buttons on each block. The analyst opens the file in a browser and clicks
-Copy on the blocks they want, then pastes into their IC slide deck.
-"""
+## 2. Rules
 
-import json
-import sys
-import html as html_lib
-from pathlib import Path
+**Which cards, in which order.** The order is fixed; `patterns` chooses among the subject-level cards but never reorders them.
 
-FILE_CSS = """
+1. Deal-level cards, only when `scope` is `project` or `hybrid`, and whatever `patterns` says:
+   1. Deal-level severity summary, when `deal_headline` is present.
+   2. Subject roster, when `subjects` is present.
+   3. Findings across the deal, when `materials` is present.
+2. Subject-level cards, each only when it is named in `patterns` and its data is present:
+   1. `executive` → Executive paragraph
+   2. `counts` → Severity count summary
+   3. `headline` → one Headline finding card per entry in `headline_findings`
+   4. `delta` → Disclosure delta
+   5. `info_flags` → Info findings (elevated by analyst)
+   6. `coverage` → Coverage map
+
+When `patterns` is missing or empty, use `executive, counts, headline, delta, coverage` for subject scope and `coverage` alone for project or hybrid scope.
+
+**What is left out.**
+
+- A headline finding with no `summary` or no `source` is not rendered. A flag title alone is not a finding.
+- A `materials` entry with no `summary` is not rendered.
+- An info flag with no `explanation` or no `title` is not rendered; if none remain, the whole card is left out. Its `meta` line is optional.
+- A roster pill is shown only for a count above zero. A subject with no flags at all keeps the `<div class="flag-pills">` wrapper and holds `<span style="color:#95A3B0;font-size:12px;">—</span>` inside it, where the pills would be.
+
+**Values.**
+
+- Escape `&`, `<`, `>`, `"` and `'` in every value you insert.
+- Severity is written in lower case as the class name and capitalised in text: `red` → `Red severity`. A headline finding with no severity is `info`; a `materials` entry with no severity is `yellow`.
+- The roster's report column is `L` followed by `report_level` (`L3`), or `L?` when it is missing.
+- In the counts card, a missing count is `0` and a missing `red_detail` or `yellow_detail` is `—`.
+- In the coverage card, `status: "checked"` (also the default) is `<span class="check">✓ {detail}</span>`; anything else is `<span class="dash">— {detail}</span>`, with `Not in scope` when there is no detail.
+
+**Header.**
+
+- Project or hybrid scope: title `IC Snippets — {project_name}` (`Deal` when missing); subtitle `{deal_type} · {number of subjects} subjects · Prepared by {prepared_by} · For {prepared_for}`.
+- Subject scope: title `IC Snippets — {subject_name}`, followed by ` / {subject_entity}` when there is one; subtitle `Intelligo {report_level} · {report_date} · Prepared by {prepared_by} · For {prepared_for}`.
+
+## 3. The two outputs
+
+Both carry the same header and the same cards. Only the wrapper and the CSS differ.
+
+### File mode (standalone page, for `present_files`)
+
+```html
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>{title}</title>
+<style>{FILE CSS}</style></head>
+<body>
+
+<div class="page-header">
+  <h1>{title}</h1>
+  <p>{subtitle}</p>
+</div>
+<div class="instructions">
+  Each block below is styled and ready to paste into PowerPoint, Google Slides, Word, or Notion. Click <strong>Copy</strong>, then paste into your slide — the formatting will be preserved.
+</div>
+{cards}
+<script>{COPY SCRIPT}</script>
+</body></html>
+```
+
+### Widget mode (inline, for `show_widget`)
+
+No DOCTYPE, `html`, `head` or `body`, and no instructions block. Everything sits inside one `.intelligo-snippet-root` container so the styles stay scoped to it.
+
+```html
+<style>{WIDGET CSS}</style>
+<div class="intelligo-snippet-root">
+
+<div class="page-header">
+  <h1>{title}</h1>
+  <p>{subtitle}</p>
+</div>
+{cards}
+</div>
+<script>{COPY SCRIPT}</script>
+```
+
+## 4. Card markup
+
+Every card is a `.snippet` with a Copy button and a label. Copy the markup as written and fill in the values.
+
+### Deal-level severity summary
+
+The `<span class="highest">` is left out when there is no `highest` text.
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Deal-level severity summary</div>
+  <div class="deal-headline">
+    <h3>Deal-level severity</h3>
+    <div class="summary">{summary}<span class="highest">{highest}</span></div>
+  </div>
+</div>
+```
+
+### Subject roster
+
+One `<tr>` per subject. Pills in this order, each only when its count is above zero.
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Subject roster</div>
+  <table class="roster-table">
+    <thead><tr><th>Subject</th><th>Report</th><th>Flags</th></tr></thead>
+    <tbody>
+    <tr>
+      <td><div class="name">{name}</div><div class="role">{role}</div></td>
+      <td>L{report_level}</td>
+      <td><div class="flag-pills"><span class="flag-pill r">{red}</span><span class="flag-pill y">{yellow}</span><span class="info-badge-pill"><span class="info-i">i</span>{info}</span></div></td>
+    </tr></tbody>
+  </table>
+</div>
+```
+
+### Findings across the deal
+
+One `.finding-item` per `materials` entry that has a summary.
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Findings across the deal</div>
+  <div class="findings-list">
+    <div class="finding-item {severity}">
+      <div class="subj">{subject} · {Severity} severity</div>
+      <p class="ftitle">{title}</p>
+      <p class="fsum">{summary}</p>
+    </div></div>
+</div>
+```
+
+### Executive paragraph
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Executive paragraph</div>
+  <div class="exec-block">
+    <h3>Executive summary</h3>
+    <p class="pull">{executive}</p>
+  </div>
+</div>
+```
+
+### Severity count summary
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Severity count summary</div>
+  <div class="count-block">
+    <div class="count-pill red"><span class="num">{red}</span><span class="label">Red</span></div>
+    <div class="count-pill yellow"><span class="num">{yellow}</span><span class="label">Yellow</span></div>
+    <div class="count-pill info"><span class="num">{info}</span><span class="label">Info</span></div>
+    <div class="count-detail">
+      <strong>Red:</strong> {red_detail}<br>
+      <strong>Yellow:</strong> {yellow_detail}
+    </div>
+  </div>
+</div>
+```
+
+### Headline finding
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Headline finding</div>
+  <div class="finding-block {severity}">
+    <span class="severity-chip {severity}">{Severity} severity</span>
+    <p class="finding-title">{title}</p>
+    <p class="finding-summary">{summary}</p>
+    <p class="finding-source">Source: {source}</p>
+  </div>
+</div>
+```
+
+### Disclosure delta
+
+One `<li>` per item in each column.
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Disclosure delta</div>
+  <div class="delta-grid">
+    <div class="delta-col">
+      <h4>Disclosed by subject</h4>
+      <ul><li>{disclosed item}</li></ul>
+    </div>
+    <div class="delta-col">
+      <h4>Found by Intelligo</h4>
+      <ul><li>{found item}</li></ul>
+    </div>
+  </div>
+  <div class="delta-gap">
+    <h4>Items found, not disclosed</h4>
+    <p>{gap_summary}</p>
+  </div>
+</div>
+```
+
+### Info findings (elevated by analyst)
+
+Only when the analyst has explicitly raised info findings for the committee. One `.info-flag-line` per flag; the `meta` paragraph is left out when there is no meta.
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Info findings (elevated by analyst)</div>
+  <div class="info-flag-line">
+    <span class="info-icon">i</span>
+    <div class="body">
+      <p class="explain">{explanation}</p>
+      <p class="title-row">{title}</p>
+      <p class="meta">{meta}</p>
+    </div>
+  </div>
+</div>
+```
+
+### Coverage map
+
+One `.coverage-row` per category.
+
+```html
+<div class="snippet">
+  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
+  <div class="snippet-label">Coverage map</div>
+  <div class="coverage-grid">
+    <div class="coverage-row"><span>{category}</span><span class="check">✓ {detail}</span></div>
+  </div>
+</div>
+```
+
+## 5. File CSS
+
+Copy it whole into the file-mode `<style>`.
+
+```css
 body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; background: #FAFBFC; padding: 32px; color: #1B2631; }
 .page-header { max-width: 720px; margin: 0 auto 24px; }
 .page-header h1 { font-family: Georgia, "Times New Roman", serif; font-weight: 600; font-size: 22px; margin: 0 0 4px; }
@@ -152,14 +381,13 @@ body { font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; bac
 .findings-list .finding-item .subj { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #7F8C8D; font-weight: 600; margin-bottom: 4px; }
 .findings-list .finding-item .ftitle { font-family: Georgia, serif; font-size: 14px; font-weight: 600; margin: 0 0 4px; }
 .findings-list .finding-item .fsum { font-size: 12px; line-height: 1.5; margin: 0; }
-"""
+```
 
-# Widget-mode CSS: matches the Intelligo light-theme design system.
-# Lavender page background, white cards with subtle borders and rounded
-# corners, indigo (#3D3FE2) primary accent, Intelligo flag pills for severity
-# (red / yellow / muted-info), no serif fonts. Designed to look native inside
-# the Intelligo product AND to paste cleanly into light-themed IC slide decks.
-WIDGET_CSS = """
+## 6. Widget CSS
+
+Copy it whole into the widget-mode `<style>`.
+
+```css
 .intelligo-snippet-root { font-family: -apple-system, "Inter", "Segoe UI", Helvetica, Arial, sans-serif; background: #EAEAFF; padding: 22px; border-radius: 12px; color: #1B2631; }
 .intelligo-snippet-root .page-header { margin: 0 0 18px; }
 .intelligo-snippet-root .page-header h1 { font-weight: 500; font-size: 17px; margin: 0 0 4px; color: #1B2631; letter-spacing: -0.1px; }
@@ -220,9 +448,13 @@ WIDGET_CSS = """
 .intelligo-snippet-root .coverage-row:last-child { border-bottom: none; }
 .intelligo-snippet-root .coverage-row .check { font-weight: 500; color: #1FA84F; }
 .intelligo-snippet-root .coverage-row .dash { color: #95A3B0; }
-"""
+```
 
-COPY_SCRIPT = """
+## 7. Copy script
+
+Copy it whole into the `<script>` at the end of either output. It copies one card to the clipboard as styled HTML, without the button and the label.
+
+```js
 function copyBlock(btn) {
   const block = btn.parentElement;
   const clone = block.cloneNode(true);
@@ -248,397 +480,4 @@ function copyBlock(btn) {
     setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
   });
 }
-"""
-
-
-def esc(s):
-    return html_lib.escape(str(s)) if s is not None else ""
-
-
-def render_headline(finding):
-    """Headline finding snippet. Requires finding summary + source.
-
-    A flag without an underlying finding is meaningless — flag titles alone
-    are too generic. If summary is missing, the renderer skips this entry
-    and emits a comment so the caller knows.
-    """
-    summary = (finding.get("summary") or "").strip()
-    source = (finding.get("source") or "").strip()
-    if not summary or not source:
-        return ("<!-- Skipped headline finding: missing summary or source. "
-                "A flag without its underlying finding text and source is not "
-                "shown — generic flag titles are not sufficient for IC output. -->")
-    sev = finding.get("severity", "info").lower()
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Headline finding</div>
-  <div class="finding-block {sev}">
-    <span class="severity-chip {sev}">{sev.capitalize()} severity</span>
-    <p class="finding-title">{esc(finding.get("title"))}</p>
-    <p class="finding-summary">{esc(summary)}</p>
-    <p class="finding-source">Source: {esc(source)}</p>
-  </div>
-</div>"""
-
-
-def render_counts(counts):
-    """Severity count summary. `red_detail` and `yellow_detail` should be
-    short finding text (not just titles) — what was actually found, briefly.
-    """
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Severity count summary</div>
-  <div class="count-block">
-    <div class="count-pill red"><span class="num">{esc(counts.get("red", 0))}</span><span class="label">Red</span></div>
-    <div class="count-pill yellow"><span class="num">{esc(counts.get("yellow", 0))}</span><span class="label">Yellow</span></div>
-    <div class="count-pill info"><span class="num">{esc(counts.get("info", 0))}</span><span class="label">Info</span></div>
-    <div class="count-detail">
-      <strong>Red:</strong> {esc(counts.get("red_detail", "—"))}<br>
-      <strong>Yellow:</strong> {esc(counts.get("yellow_detail", "—"))}
-    </div>
-  </div>
-</div>"""
-
-
-def render_delta(delta):
-    disclosed_items = "".join(f"<li>{esc(x)}</li>" for x in delta.get("disclosed", []))
-    found_items = "".join(f"<li>{esc(x)}</li>" for x in delta.get("found", []))
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Disclosure delta</div>
-  <div class="delta-grid">
-    <div class="delta-col">
-      <h4>Disclosed by subject</h4>
-      <ul>{disclosed_items}</ul>
-    </div>
-    <div class="delta-col">
-      <h4>Found by Intelligo</h4>
-      <ul>{found_items}</ul>
-    </div>
-  </div>
-  <div class="delta-gap">
-    <h4>Items found, not disclosed</h4>
-    <p>{esc(delta.get("gap_summary", ""))}</p>
-  </div>
-</div>"""
-
-
-def render_executive(text):
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Executive paragraph</div>
-  <div class="exec-block">
-    <h3>Executive summary</h3>
-    <p class="pull">{esc(text)}</p>
-  </div>
-</div>"""
-
-
-def render_coverage(rows):
-    out = []
-    for r in rows:
-        status = r.get("status", "checked")
-        if status == "checked":
-            mark = f'<span class="check">✓ {esc(r.get("detail", ""))}</span>'
-        else:
-            mark = f'<span class="dash">— {esc(r.get("detail", "Not in scope"))}</span>'
-        out.append(f'<div class="coverage-row"><span>{esc(r["category"])}</span>{mark}</div>')
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Coverage map</div>
-  <div class="coverage-grid">
-    {"".join(out)}
-  </div>
-</div>"""
-
-
-def render_deal_headline(headline):
-    """Project-level: factual severity summary line. Never a verdict.
-
-    Expected shape:
-      {"summary": "5 subjects reviewed at L3. 1 red, 4 yellow, 18 info.",
-       "highest": "Highest-severity finding: SEC consent order on John Sponsor (2019, $1.2M, undisclosed). See below."}
-
-    Both fields are plain factual strings. No "clean / material / blocker"
-    inputs are accepted — the schema deliberately excludes them.
-    """
-    summary = headline.get("summary", "")
-    highest = headline.get("highest", "")
-    highest_block = f'<span class="highest">{esc(highest)}</span>' if highest else ""
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Deal-level severity summary</div>
-  <div class="deal-headline">
-    <h3>Deal-level severity</h3>
-    <div class="summary">{esc(summary)}{highest_block}</div>
-  </div>
-</div>"""
-
-
-def render_roster(subjects):
-    """Project-level: subject-by-subject roster table.
-
-    Flag counts use Intelligo's visual language: red pill (#E94E64 on white),
-    yellow pill (#F0CE3F on dark), info badge (teal circular i + count).
-    Pills are only rendered when count > 0 — zero-count flags are omitted.
-
-    No judgement column — flag counts speak for themselves. Verdicts like
-    'Clean / Material / Blocker' are the IC's call, not the skill's.
-    """
-    rows = []
-    for s in subjects:
-        flags = s.get("flags", {})
-        red = int(flags.get("red", 0) or 0)
-        yellow = int(flags.get("yellow", 0) or 0)
-        info = int(flags.get("info", 0) or 0)
-
-        pills = []
-        if red > 0:
-            pills.append(f'<span class="flag-pill r">{red}</span>')
-        if yellow > 0:
-            pills.append(f'<span class="flag-pill y">{yellow}</span>')
-        if info > 0:
-            pills.append(f'<span class="info-badge-pill"><span class="info-i">i</span>{info}</span>')
-        # If a subject has no flags at all, show an em-dash so the row isn't empty.
-        pill_html = "".join(pills) if pills else '<span style="color:#95A3B0;font-size:12px;">—</span>'
-
-        rows.append(f"""
-    <tr>
-      <td><div class="name">{esc(s.get("name"))}</div><div class="role">{esc(s.get("role", ""))}</div></td>
-      <td>L{esc(s.get("report_level", "?"))}</td>
-      <td><div class="flag-pills">{pill_html}</div></td>
-    </tr>""")
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Subject roster</div>
-  <table class="roster-table">
-    <thead><tr><th>Subject</th><th>Report</th><th>Flags</th></tr></thead>
-    <tbody>{"".join(rows)}</tbody>
-  </table>
-</div>"""
-
-
-def render_info_flags(items):
-    """Detail view of analyst-elevated info findings.
-
-    Matches Intelligo's native info-flag layout: circular teal 'i' badge to the
-    left of each finding, with the explanation text, the titled item, and a
-    meta line (role/date/source). Use only when the analyst has explicitly
-    elevated an info finding for the IC — info flags are skipped by default.
-
-    Schema:
-      {"explanation": "Why this info flag was raised.",
-       "title": "Item title (e.g. company, school, court name)",
-       "meta": "Role · dates · duration · source"}
-    """
-    if not items:
-        return ""
-    lines = []
-    for it in items:
-        explain = (it.get("explanation") or "").strip()
-        title = (it.get("title") or "").strip()
-        meta = (it.get("meta") or "").strip()
-        if not explain or not title:
-            continue
-        lines.append(f"""
-  <div class="info-flag-line">
-    <span class="info-icon">i</span>
-    <div class="body">
-      <p class="explain">{esc(explain)}</p>
-      <p class="title-row">{esc(title)}</p>
-      {f'<p class="meta">{esc(meta)}</p>' if meta else ''}
-    </div>
-  </div>""")
-    if not lines:
-        return ""
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Info findings (elevated by analyst)</div>
-  {"".join(lines)}
-</div>"""
-
-
-def render_materials_list(items):
-    """Project-level: red/yellow findings across all subjects, attributed.
-
-    Each entry must include `summary` (the underlying finding text). Entries
-    without summary are skipped — flag titles alone are too generic for an IC.
-    """
-    out = []
-    for item in items:
-        summary = (item.get("summary") or "").strip()
-        if not summary:
-            out.append("<!-- Skipped entry: missing finding text. Flag title alone is not enough. -->")
-            continue
-        sev = item.get("severity", "yellow").lower()
-        out.append(f"""
-    <div class="finding-item {sev}">
-      <div class="subj">{esc(item.get("subject", ""))} · {sev.capitalize()} severity</div>
-      <p class="ftitle">{esc(item.get("title"))}</p>
-      <p class="fsum">{esc(summary)}</p>
-    </div>""")
-    return f"""
-<div class="snippet">
-  <button class="copy-btn" onclick="copyBlock(this)">Copy</button>
-  <div class="snippet-label">Findings across the deal</div>
-  <div class="findings-list">{"".join(out)}</div>
-</div>"""
-
-
-def render(spec):
-    blocks = []
-    scope = spec.get("scope", "subject")  # subject / project / hybrid
-
-    # Project-level patterns (only emit when scope is project or hybrid)
-    if scope in ("project", "hybrid"):
-        if spec.get("deal_headline"):
-            blocks.append(render_deal_headline(spec["deal_headline"]))
-        if spec.get("subjects"):
-            blocks.append(render_roster(spec["subjects"]))
-        if spec.get("materials"):
-            blocks.append(render_materials_list(spec["materials"]))
-
-    # Subject-level patterns (always available; emitted for subject scope or hybrid deep-dive)
-    patterns = spec.get("patterns", [])
-    if not patterns:
-        # Sensible defaults per scope
-        patterns = (["executive", "counts", "headline", "delta", "coverage"]
-                    if scope == "subject" else ["coverage"])
-
-    if "executive" in patterns and spec.get("executive"):
-        blocks.append(render_executive(spec["executive"]))
-    if "counts" in patterns and spec.get("counts"):
-        blocks.append(render_counts(spec["counts"]))
-    if "headline" in patterns:
-        for f in spec.get("headline_findings", []):
-            blocks.append(render_headline(f))
-    if "delta" in patterns and spec.get("delta"):
-        blocks.append(render_delta(spec["delta"]))
-    if "info_flags" in patterns and spec.get("info_flags"):
-        blocks.append(render_info_flags(spec["info_flags"]))
-    if "coverage" in patterns and spec.get("coverage"):
-        blocks.append(render_coverage(spec["coverage"]))
-
-    # Header varies by scope
-    if scope in ("project", "hybrid"):
-        title = f"IC Snippets — {esc(spec.get('project_name', 'Deal'))}"
-        subtitle = (f"{esc(spec.get('deal_type', ''))} · {esc(len(spec.get('subjects', [])))} subjects · "
-                    f"Prepared by {esc(spec.get('prepared_by', ''))} · For {esc(spec.get('prepared_for', ''))}")
-    else:
-        subj = esc(spec.get("subject_name", ""))
-        ent = f" / {esc(spec['subject_entity'])}" if spec.get("subject_entity") else ""
-        title = f"IC Snippets — {subj}{ent}"
-        subtitle = (f"Intelligo {esc(spec.get('report_level', ''))} · {esc(spec.get('report_date', ''))} · "
-                    f"Prepared by {esc(spec.get('prepared_by', ''))} · For {esc(spec.get('prepared_for', ''))}")
-
-    header = f"""
-<div class="page-header">
-  <h1>{title}</h1>
-  <p>{subtitle}</p>
-</div>
-<div class="instructions">
-  Each block below is styled and ready to paste into PowerPoint, Google Slides, Word, or Notion. Click <strong>Copy</strong>, then paste into your slide — the formatting will be preserved.
-</div>"""
-
-    return f"""<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>{title}</title>
-<style>{FILE_CSS}</style></head>
-<body>
-{header}
-{"".join(blocks)}
-<script>{COPY_SCRIPT}</script>
-</body></html>"""
-
-
-def render_for_widget(spec):
-    """Render content suitable for the Cowork show_widget tool.
-
-    Returns the inner content only — no DOCTYPE/html/head/body wrapper.
-    Wrapped in a single .intelligo-snippet-root container so all styles are
-    scoped (won't leak into the chat).
-    scoped and won't bleed into the surrounding chat. Background is
-    transparent and there's no top-level padding, per show_widget guidance.
-
-    Use this when rendering the snippets inline in chat as a canvas. Use
-    render() instead when producing a standalone .html file for download.
-    """
-    blocks = []
-    scope = spec.get("scope", "subject")
-
-    if scope in ("project", "hybrid"):
-        if spec.get("deal_headline"):
-            blocks.append(render_deal_headline(spec["deal_headline"]))
-        if spec.get("subjects"):
-            blocks.append(render_roster(spec["subjects"]))
-        if spec.get("materials"):
-            blocks.append(render_materials_list(spec["materials"]))
-
-    patterns = spec.get("patterns", [])
-    if not patterns:
-        patterns = (["executive", "counts", "headline", "delta", "coverage"]
-                    if scope == "subject" else ["coverage"])
-
-    if "executive" in patterns and spec.get("executive"):
-        blocks.append(render_executive(spec["executive"]))
-    if "counts" in patterns and spec.get("counts"):
-        blocks.append(render_counts(spec["counts"]))
-    if "headline" in patterns:
-        for f in spec.get("headline_findings", []):
-            blocks.append(render_headline(f))
-    if "delta" in patterns and spec.get("delta"):
-        blocks.append(render_delta(spec["delta"]))
-    if "info_flags" in patterns and spec.get("info_flags"):
-        blocks.append(render_info_flags(spec["info_flags"]))
-    if "coverage" in patterns and spec.get("coverage"):
-        blocks.append(render_coverage(spec["coverage"]))
-
-    if scope in ("project", "hybrid"):
-        title = f"IC Snippets — {esc(spec.get('project_name', 'Deal'))}"
-        subtitle = (f"{esc(spec.get('deal_type', ''))} · {esc(len(spec.get('subjects', [])))} subjects · "
-                    f"Prepared by {esc(spec.get('prepared_by', ''))} · For {esc(spec.get('prepared_for', ''))}")
-    else:
-        subj = esc(spec.get("subject_name", ""))
-        ent = f" / {esc(spec['subject_entity'])}" if spec.get("subject_entity") else ""
-        title = f"IC Snippets — {subj}{ent}"
-        subtitle = (f"Intelligo {esc(spec.get('report_level', ''))} · {esc(spec.get('report_date', ''))} · "
-                    f"Prepared by {esc(spec.get('prepared_by', ''))} · For {esc(spec.get('prepared_for', ''))}")
-
-    header = f"""
-<div class="page-header">
-  <h1>{title}</h1>
-  <p>{subtitle}</p>
-</div>"""
-
-    return f"""<style>{WIDGET_CSS}</style>
-<div class="intelligo-snippet-root">
-{header}
-{"".join(blocks)}
-</div>
-<script>{COPY_SCRIPT}</script>"""
-
-
-def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    flags = {a for a in sys.argv[1:] if a.startswith("--")}
-    if len(args) < 2:
-        print("Usage: generate_snippets.py [--widget] findings.json output.html",
-              file=sys.stderr)
-        print("  --widget  Emit widget-mode content (for show_widget tool) instead of a full HTML document.",
-              file=sys.stderr)
-        sys.exit(1)
-    spec = json.loads(Path(args[0]).read_text())
-    out = render_for_widget(spec) if "--widget" in flags else render(spec)
-    Path(args[1]).write_text(out)
-    print(f"Wrote {args[1]}{' (widget mode)' if '--widget' in flags else ''}")
-
-
-if __name__ == "__main__":
-    main()
+```

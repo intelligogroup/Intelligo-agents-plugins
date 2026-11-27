@@ -1,6 +1,6 @@
 # Snippet Design Spec
 
-Design goals and pattern catalog for the inline snippet canvas. The actual CSS, colors, and copy-clipboard handler live in `scripts/generate_snippets.py` — that's the source of truth for values. This doc is the why.
+Design goals and pattern catalog for the inline snippet canvas. The actual CSS, colors, markup and copy-clipboard handler live in `snippet-html.md` — that's the source of truth for values. This doc is the why.
 
 ## Design goals
 
